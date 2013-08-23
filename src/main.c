@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
     other_pg = search_mode(argc, argv, "-other_pg");
     
     /*Other functionalities as guide tree identification*/
-    
+  
     if(other_pg){
         P = read_parameters(argc, argv);
         if(strm(P->other_pg_mode, "-tree_id")){

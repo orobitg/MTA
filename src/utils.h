@@ -24,7 +24,7 @@
 #endif
 
 #define DATE "dt set 25 12:39:42 CEST 2012"
-#define PROGRAM "MTA"
+#define PROGRAM "MTA - GIT"
 #define VERSION "1.0"
 #define AUTHOR "Miquel Orobitg, Fernado Guirado, Fernando Cores"
 #define DISTRIBUTION_ADDRESS "http://gcd.udl.cat/mta"  //canviar
