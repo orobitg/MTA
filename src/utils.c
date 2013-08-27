@@ -212,29 +212,8 @@ FILE *skip_space(FILE *fp){
 }
 
 /*
- * Count the number of characters of a file
-
-int count_n_char_in_file(const char *name){
-
-    int c, n;
-    FILE *fp;
-
-    n = 0;
-    openfile(fp, name, "r");
-
-    while ((c = fgetc(fp)) != EOF){
-        n++;
-    }
-    fclose(fp);
-
-    return n;
-}
-
-
-/*
  * Obtain the time
  */
-
 
 double get_time(){
     struct timeval t;

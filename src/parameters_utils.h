@@ -42,18 +42,7 @@ struct Parameters{
     //STRIKE & IRMSD parameters
     char *str_file;
     char *irmsd_file;
-    
-    //T_Coffee reduction
-    int red;
-    
- 
-    //KM_TREE
-    int k;
-    int n;
-    int stats;
-    char *cl_mode;
-
-    
+        
     Fname *F;
     Paths *PB;
 };
@@ -64,7 +53,6 @@ void free_parameters(Parameters *P);
 Parameters *default_values(Parameters *P, char *outdir);
 Parameters *read_parameters(int argc, char** argv);
 Parameters *score_parameters(Parameters *P, int argc, char** argv);
-Parameters *msa_parameters(Parameters *P, int argc, char** argv);
 int search_mode(int argc, char** argv, char *mode);
 void printhelp();
 

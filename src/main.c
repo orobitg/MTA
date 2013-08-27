@@ -15,7 +15,6 @@
 #include "distance_matrix_utils.h"
 #include "guide_tree_utils.h"
 #include "parameters_utils.h"
-#include "kmcoffee.h"
 
 int my_rank;
 int np;
@@ -54,9 +53,6 @@ int main(int argc, char** argv) {
             free_parameters(P);
             exit(EXIT_SUCCESS);
         }
-        //else if(strm(P->other_pg_mode, "-km_mode")){
-            //return kmcoffee(P); //disabled
-        //}
         else {
             fprintf(stderr, "ERROR: BAD OTHER PROGRAM MODE\n");
             exit(EXIT_FAILURE);
@@ -210,6 +206,3 @@ int main(int argc, char** argv) {
     return tree_id;
 
  }
-
- 
- 

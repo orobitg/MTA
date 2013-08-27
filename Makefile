@@ -8,7 +8,7 @@ BIN = ./bin
 # Better do not change this
 
 MPICC = gcc
-MPICC = mpicc
+#MPICC = mpicc
 #MPICC = /Users/orobitg/Applications/mpich2/bin/mpicc
 #MPICC=/home/oro/Aplicacions/mpich2/bin/mpicc
 GCCFLAGS := -I$(INC) -I$(MPIEXT)
@@ -17,7 +17,7 @@ GCCFLAGS := -I$(INC) -I$(MPIEXT)
 GCCFLAGS += -g
 GCCFLAGS += -O3
 #CFLAGS=-DMPI_FLAG
-MPIFLAGS=-DMPI_FLAG
+MPIFLAGS=-DSEQ_FLAG
 GCCFLAGS += ${MPIFLAGS}
 
 LIBS = -lm -lpthread
@@ -33,7 +33,6 @@ OBJS = 	\
 	guide_tree_utils.o \
 	alignment_utils.o \
 	evaluation_utils.o \
-	kmcoffee.o \
 	main.o
 	  
 	

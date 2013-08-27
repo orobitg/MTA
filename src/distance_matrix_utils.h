@@ -27,7 +27,6 @@ void free_distance_matrix(Distance_matrix *DM);
 
 Distance_matrix *make_distance_matrix(Sequence *S, char *mode);
 
-int **random_dist_mat(char **seq, int nseq);
 int **ktup_dist_mat(char **seq, int nseq, int ktup, char *type);
 int *makepointtable(int *pointt, int *n, int ktup);
 int *code_seq (char *seq, char *type);

@@ -47,9 +47,6 @@ Distance_matrix *make_distance_matrix(Sequence *S, char *mode){
     if(strm(mode, "ktup")){
         sim_table = ktup_dist_mat(S->seq, S->nseq, ktup, S->type);
     }
-    else if(strm(mode, "random")){
-        sim_table = random_dist_mat(S->seq, S->nseq);
-    }
     else {
         fprintf(stderr, "ERROR - Bad distance matrix mode\n");
         exit(EXIT_FAILURE);
@@ -89,32 +86,8 @@ Distance_matrix *make_distance_matrix(Sequence *S, char *mode){
     free_int(l_s, -1);
     free_int(sim_table, -1);
     fprintf(stdout, "---> DONE\n");
+    
     return DM;
-}
-
-/*Calculate random distances - Test matrix.*/
-
-int **random_dist_mat(char **seq, int nseq){
-    int **pscore;
-    int i=0, j=0;
-
-    pscore=declare_int ( nseq, nseq);
-    srand((unsigned)time(0));
-
-    for(i=0; i<nseq; i++){
-        for(j=i; j<nseq; j++){
-            if(i == j){
-                pscore[i][j] = pscore[j][i] = 0;
-            }
-            else {
-               //pscore[i][j] = pscore[j][i] = lowest + int(range*rand()/(RAND_MAX +1.0));
-                pscore[i][j] = pscore[j][i] = (rand()%100)+1;
-            }
-
-        }
-    }
-
-    return pscore;
 }
 
 /*Calculate k-tup distances*/
