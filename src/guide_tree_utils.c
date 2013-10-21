@@ -855,7 +855,6 @@ NT_node** read_tree(char *treefile, int *tot_node,int nseq, char **seq_names, in
     fp=create_tree(seq_tree,NULL,&nseq_read, &ntotal, &nnodes, lu_ptr, fp);
     fclose (fp);
     
-    
     if(distance_tree == FALSE){
         if(rooted_tree == FALSE){
             fprintf(stderr,"ERROR: input tree is unrooted and has no distances, cannot align sequences\n");
@@ -870,7 +869,7 @@ NT_node** read_tree(char *treefile, int *tot_node,int nseq, char **seq_names, in
     else {
         root = seq_tree;
     }
-   // root = reroot(root, nseq,ntotal,nnodes, lu_ptr);
+    
     lu_ptr[3][0]=root;
     root->nnodes = ntotal;
     tot_node[0]=nnodes;
@@ -2501,5 +2500,45 @@ char** file2tree_id_list(char *fname, int ntrees, int nseqs, int entries){
     fclose(fp);
     vfree(tree_id);
     return tree_id_list;
+}
+
+void root_unrooted_tree(char *treename, int ntree, char *retree_bin){
+    
+    FILE *fp;
+    char *intmpname, *outtmpname;
+    char *cmd;
+    
+    intmpname = (char *) vcalloc(FILENAMELEN, sizeof(char));
+    outtmpname = (char *) vcalloc(FILENAMELEN, sizeof(char));
+    cmd = (char *) vcalloc(ALLPATH, sizeof(char));
+    
+    sprintf(intmpname, "./input_%d.run", ntree);
+    sprintf(outtmpname, "./output_%d.txt", ntree);
+    
+    fp = fopen(intmpname, "w");
+    printf("%s\n", treename);
+        fprintf(fp, "Y\n");
+    fprintf(fp, "%s\n", treename);
+    fprintf(fp, "W\n");
+    fprintf(fp, "F\n");
+    fprintf(fp, "%s.rooted\n", treename);
+    fprintf(fp, "R\n");
+    fprintf(fp, "Q\n");
+    
+    fclose(fp);
+    sprintf(cmd, "%s < %s > %s", retree_bin, intmpname, outtmpname);
+    system(cmd);
+    
+    sprintf(cmd, "mv %s.rooted %s", treename, treename);
+    system(cmd);
+    
+    remove(intmpname);
+    remove(outtmpname);
+    
+    vfree(intmpname);
+    vfree(outtmpname);
+    vfree(cmd);
+ 
+    
 }
 

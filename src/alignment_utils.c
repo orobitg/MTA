@@ -521,7 +521,9 @@ void worker_generate_mta(Parameters *P, Sequence *S, Distance_matrix *DM){
 /*Align a Tree with the chosen MSA method*/
 void align_tree(Parameters *P, char *treename, char *libname, char *alnname, int ntree){
 
+    FILE *fptmp;
     char *align_app;
+    char *tmpname;
     int ret;
     align_app = (char *) vcalloc(ALLPATH, sizeof(char));
 
@@ -557,8 +559,18 @@ void align_tree(Parameters *P, char *treename, char *libname, char *alnname, int
     }
     else if(strm(P->align_method, "clustalo")){
         if((P->PB)->clustalo_bin != NULL){
+            
+            tmpname = (char *) vcalloc(FILENAMELEN, sizeof(char));
+            sprintf(tmpname, "./outtree");
+            fptmp = openfile(tmpname, "w");
+            fclose(fptmp);
+            vfree(tmpname);
+            root_unrooted_tree(treename, ntree, (P->PB)->retree_bin);
+            
             sprintf(align_app, "%s -i %s --guidetree-in=%s --outfmt=fa -o %s", (P->PB)->clustalo_bin, (P->F)->full, treename, alnname);
             ret=system(align_app);
+            
+            
         }
         else {
             fprintf(stderr, "Error - ClustalO not found. Correct ClustalO path\n");
@@ -569,11 +581,19 @@ void align_tree(Parameters *P, char *treename, char *libname, char *alnname, int
         if((P->PB)->mafft_bin != NULL && (P->PB)->nwtomafft != NULL){
             char *treename2;
             treename2 = (char *) vcalloc(ALLPATH, sizeof(char));
+            
+            tmpname = (char *) vcalloc(FILENAMELEN, sizeof(char));
+            sprintf(tmpname, "./outtree");
+            fptmp = openfile(tmpname, "w");
+            fclose(fptmp);
+            vfree(tmpname);
+            root_unrooted_tree(treename, ntree, (P->PB)->retree_bin);
+            
             sprintf(treename2, "%s%s_%d.mafft", P->outdir, (P->F)->name, ntree);
-            sprintf(align_app, "%s %s > %s", (P->PB)->nwtomafft, treename, treename2);
+            sprintf(align_app, "%s %s > %s 2> /dev/null", (P->PB)->nwtomafft, treename, treename2);
             ret=system(align_app);
             
-            sprintf(align_app, "%s --auto --treein %s %s > %s", (P->PB)->mafft_bin, treename2, (P->F)->full, alnname);
+            sprintf(align_app, "%s --auto --treein %s %s > %s 2> /dev/null", (P->PB)->mafft_bin, treename2, (P->F)->full, alnname);
             ret=system(align_app);
             
             remove_file(treename2);

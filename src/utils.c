@@ -81,6 +81,7 @@ Paths *declare_paths(){
     PB->tc_score_bin = (char *) vcalloc(ALLPATH, sizeof (char));
     
     PB->nwtomafft = (char *) vcalloc(ALLPATH, sizeof (char));
+    PB->retree_bin = (char *) vcalloc(ALLPATH, sizeof (char));
     
     return PB;    
 }
@@ -163,8 +164,8 @@ Paths *parse_paths(){
     if(PB->strike_bin==NULL)
         fprintf(stderr, "Warning: STRIKE path not found. STRIKE score disabled\n");
     
-    sprintf(PB->nwtomafft, "%s/src/scripts/newick2mafft.rb", PB->mta_home);
-    printf("%s\n", PB->mta_home);
+    sprintf(PB->nwtomafft, "%s/bin/plugins/newick2mafft.rb", PB->mta_home);
+    sprintf(PB->retree_bin, "%s/bin/plugins/retree", PB->mta_home);
     
     //printf("%s\n%s\n%s\n%s\n%s\n%s\n", PB->tcoffee_bin,  PB->clustalw_bin,  PB->clustalo_bin, PB->normd_bin, PB->strike_bin, PB->tc_score_bin);
     

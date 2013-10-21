@@ -109,6 +109,7 @@ typedef struct
     char *strike_bin;
     char *tc_score_bin;
     char *nwtomafft;
+    char *retree_bin;
 }
 Paths;
 
