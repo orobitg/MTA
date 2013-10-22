@@ -14,10 +14,12 @@ extern int np;
 int mta_program_repeated_trees(Parameters *P, Sequence *S, Distance_matrix *DM){
 
     FILE *fp;
+    FILE *fptmp;
     int i=0, j=0, k=0, ret, max_ntree=-1;
     double *sc_list;
     double max_score=-99999.99999;
-    char *treename, *alnname, *libname=NULL, *bestalignment, *besttree, *scoresfile;   
+    char *treename, *alnname, *libname=NULL, *bestalignment, *besttree, *scoresfile;
+    char *tmpname;
     NT_node **T;
     struct timeval tim;
 
@@ -39,6 +41,13 @@ int mta_program_repeated_trees(Parameters *P, Sequence *S, Distance_matrix *DM){
         sprintf(libname, "%s%s.lib", P->outdir, (P->F)->name);      
     }
   
+    if(strm(P->align_method, "clustalo") || strm(P->align_method, "mafft")){
+        tmpname = (char *) vcalloc(FILENAMELEN, sizeof(char));
+        sprintf(tmpname, "./outtree");
+        fptmp = openfile(tmpname, "w");
+        fclose(fptmp);
+        vfree(tmpname);
+    }
     //gettimeofday(&tim, NULL);
     srand(1985);
     
@@ -75,6 +84,9 @@ int mta_program_repeated_trees(Parameters *P, Sequence *S, Distance_matrix *DM){
         remove_file(libname);
         vfree(libname);
     }
+    if(strm(P->align_method, "clustalo") || strm(P->align_method, "mafft")){
+        remove(tmpname);
+    }
 
     fprintf(stdout, "---> Done\n");
     fprintf(stdout, "\n\t- BEST TREE: %s_%d - Score: %lf\n", (P->F)->name, max_ntree, max_score);
@@ -85,6 +97,8 @@ int mta_program_repeated_trees(Parameters *P, Sequence *S, Distance_matrix *DM){
     rename(bestalignment, alnname);
 
     fprintf(fp, "Best;%s_%d;%lf\n", (P->F)->name, max_ntree, max_score);
+    
+    
 
     fclose(fp);
     vfree(scoresfile);
@@ -102,12 +116,14 @@ int mta_program_repeated_trees(Parameters *P, Sequence *S, Distance_matrix *DM){
 int mta_program_no_repeated_trees(Parameters *P, Sequence *S, Distance_matrix *DM){
 
     FILE *fp;
+    FILE *fptmp;
     int i=0, j=0, k=0, ntreeid=0, ret=0, entries=0, max_ntree=-1;   
     int tree_id_lenght;
     double max_score=-99999.99999;
     double *sc_list;
     char *tree_id;
     char *treename, *alnname, *libname=NULL, *scoresfile, *bestalignment, *besttree;
+    char *tmpname;
     char **tree_id_list;
     NT_node **T;
 
@@ -129,6 +145,14 @@ int mta_program_no_repeated_trees(Parameters *P, Sequence *S, Distance_matrix *D
     if(strm(P->align_method, "tcoffee")){
         libname = (char *) vcalloc(FILENAMELEN, sizeof(char));
         sprintf(libname, "%s%s.lib", P->outdir, (P->F)->name);
+    }
+    
+    if(strm(P->align_method, "clustalo") || strm(P->align_method, "mafft")){
+        tmpname = (char *) vcalloc(FILENAMELEN, sizeof(char));
+        sprintf(tmpname, "./outtree");
+        fptmp = openfile(tmpname, "w");
+        fclose(fptmp);
+        vfree(tmpname);
     }
     
     tree_id_lenght = (5*S->nseq);
@@ -188,6 +212,9 @@ int mta_program_no_repeated_trees(Parameters *P, Sequence *S, Distance_matrix *D
     if(strm(P->align_method, "tcoffee")){
         remove_file(libname);
         vfree(libname);
+    }
+    if(strm(P->align_method, "clustalo") || strm(P->align_method, "mafft")){
+        remove(tmpname);
     }
 
     fprintf(stdout, "---> Done\n");
@@ -307,6 +334,7 @@ int mta_program_no_repeated_trees(Parameters *P, Sequence *S, Distance_matrix *D
 void master_generate_mta(Parameters *P, Sequence *S, Distance_matrix *DM){
     
     FILE *fp;
+    FILE*fptmp;
     int i=0, ret, max_ntree=-1, tam=0, position=0, tree=0;
     int work=0, from_where=0, m=0;
     int *dest;
@@ -314,6 +342,7 @@ void master_generate_mta(Parameters *P, Sequence *S, Distance_matrix *DM){
     double *sc_list;
     char *treename, *alnname, *libname, *treatf, *scoresfile;
     char *bestalignment, *besttree, *buffer;
+    char *tmpname;
     NT_node **T;
    
     MPI_Status status;
@@ -345,6 +374,13 @@ void master_generate_mta(Parameters *P, Sequence *S, Distance_matrix *DM){
         sprintf(treatf, "%s %s -lib_only -out_lib %s > /dev/null 2>&1", P->align_method_bin, (P->F)->full, libname);
         ret = system(treatf);
         printf("\tDone....\n");
+    }
+    if(strm(P->align_method, "clustalo") || strm(P->align_method, "mafft")){
+        tmpname = (char *) vcalloc(FILENAMELEN, sizeof(char));
+        sprintf(tmpname, "./outtree");
+        fptmp = openfile(tmpname, "w");
+        fclose(fptmp);
+        vfree(tmpname);
     }
     
     sprintf(scoresfile, "%s%s.scores", P->outdir, (P->F)->name);
@@ -438,6 +474,9 @@ void master_generate_mta(Parameters *P, Sequence *S, Distance_matrix *DM){
         remove_file(libname);
         vfree(libname);
     }  
+     if(strm(P->align_method, "clustalo") || strm(P->align_method, "mafft")){
+        remove(tmpname);
+    }
    
     sprintf(treename, "%s%s.dnd", P->outdir, (P->F)->name);
     rename(besttree, treename);
@@ -521,9 +560,7 @@ void worker_generate_mta(Parameters *P, Sequence *S, Distance_matrix *DM){
 /*Align a Tree with the chosen MSA method*/
 void align_tree(Parameters *P, char *treename, char *libname, char *alnname, int ntree){
 
-    FILE *fptmp;
     char *align_app;
-    char *tmpname;
     int ret;
     align_app = (char *) vcalloc(ALLPATH, sizeof(char));
 
@@ -556,21 +593,12 @@ void align_tree(Parameters *P, char *treename, char *libname, char *alnname, int
             fprintf(stderr, "Error - ClustalW not found. Correct ClustalW path\n");
             exit(EXIT_FAILURE);
         }
-    }
+    }  
     else if(strm(P->align_method, "clustalo")){
         if((P->PB)->clustalo_bin != NULL){
-            
-            tmpname = (char *) vcalloc(FILENAMELEN, sizeof(char));
-            sprintf(tmpname, "./outtree");
-            fptmp = openfile(tmpname, "w");
-            fclose(fptmp);
-            vfree(tmpname);
             root_unrooted_tree(treename, ntree, (P->PB)->retree_bin);
-            
             sprintf(align_app, "%s -i %s --guidetree-in=%s --outfmt=fa -o %s", (P->PB)->clustalo_bin, (P->F)->full, treename, alnname);
             ret=system(align_app);
-            
-            
         }
         else {
             fprintf(stderr, "Error - ClustalO not found. Correct ClustalO path\n");
@@ -582,20 +610,15 @@ void align_tree(Parameters *P, char *treename, char *libname, char *alnname, int
             char *treename2;
             treename2 = (char *) vcalloc(ALLPATH, sizeof(char));
             
-            tmpname = (char *) vcalloc(FILENAMELEN, sizeof(char));
-            sprintf(tmpname, "./outtree");
-            fptmp = openfile(tmpname, "w");
-            fclose(fptmp);
-            vfree(tmpname);
             root_unrooted_tree(treename, ntree, (P->PB)->retree_bin);
-            
+
             sprintf(treename2, "%s%s_%d.mafft", P->outdir, (P->F)->name, ntree);
-            sprintf(align_app, "%s %s > %s 2> /dev/null", (P->PB)->nwtomafft, treename, treename2);
+            sprintf(align_app, "%s %s > %s", (P->PB)->nwtomafft, treename, treename2);
             ret=system(align_app);
-            
+
             sprintf(align_app, "%s --auto --treein %s %s > %s 2> /dev/null", (P->PB)->mafft_bin, treename2, (P->F)->full, alnname);
             ret=system(align_app);
-            
+
             remove_file(treename2);
             vfree(treename2);
         }

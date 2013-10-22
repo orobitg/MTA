@@ -660,13 +660,8 @@ void guide_tree(char *fname, double **saga_tmat, char **saga_seq_name, int saga_
 
     fp=openfile(fname, "w");
 
-    if(strm(method, "clustalo") || strm(method, "mafft")){
-        print_phylip_tree_clo(standard_tree, fp, FALSE);
-    }
-    else {
+    print_phylip_tree(standard_tree, fp, FALSE);
 
-        print_phylip_tree(standard_tree, fp, FALSE);
-    }
 
     vfree(left_branch);
     vfree(right_branch);
@@ -678,6 +673,7 @@ void guide_tree(char *fname, double **saga_tmat, char **saga_seq_name, int saga_
     }
 
     fclose(fp);
+ 
 }
 
 void nj_tree(char **tree_description, int nseq, char *mode, int tree, int nrand){  
@@ -718,6 +714,7 @@ void print_phylip_tree(char **tree_description, FILE *tree, int bootstrap){
     fprintf(tree,";\n");
 }
 
+/*
 void print_phylip_tree_clo(char **tree_description, FILE *tree, int bootstrap){
 
     fprintf(tree,"(\n(\n");
@@ -733,6 +730,7 @@ void print_phylip_tree_clo(char **tree_description, FILE *tree, int bootstrap){
     if (bootstrap) fprintf(tree,"TRICHOTOMY");
     fprintf(tree,";\n");
 }
+*/
 
 void two_way_split(char **tree_description, FILE *tree, int start_row, int flag, int bootstrap){
 
@@ -2516,8 +2514,7 @@ void root_unrooted_tree(char *treename, int ntree, char *retree_bin){
     sprintf(outtmpname, "./output_%d.txt", ntree);
     
     fp = fopen(intmpname, "w");
-    printf("%s\n", treename);
-        fprintf(fp, "Y\n");
+    fprintf(fp, "Y\n");
     fprintf(fp, "%s\n", treename);
     fprintf(fp, "W\n");
     fprintf(fp, "F\n");
