@@ -22,5 +22,6 @@ void worker_generate_mta(Parameters *P, Sequence *S, Distance_matrix *DM);
 #endif
 
 void align_tree(Parameters *P, char *treename, char *libname, char *alnname, int ntree);
+char** read_tree_list(char* tree_list, int ntree);
 
 #endif	/* ALIGNMENT_UTILS_H */

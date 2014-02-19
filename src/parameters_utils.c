@@ -18,6 +18,7 @@ Parameters *declare_parameters(){
     P->seqfile = (char *) vcalloc(FILENAMELEN, sizeof(char));
     P->tree_id_file = (char *) vcalloc(FILENAMELEN, sizeof(char));
     P->tree_file = (char *) vcalloc(FILENAMELEN, sizeof(char));
+    P->tree_list = (char *) vcalloc(FILENAMELEN, sizeof(char));
     P->mat = (char *) vcalloc(STRING, sizeof(char));
     P->str_file = (char *) vcalloc(ALLPATH, sizeof(char));
     P->irmsd_file = (char *) vcalloc(ALLPATH, sizeof(char));
@@ -38,6 +39,7 @@ void free_parameters(Parameters *P){
     vfree(P->seqfile);
     vfree(P->tree_id_file);
     vfree(P->tree_file);
+    vfree(P->tree_list);
     vfree(P->mat);
     vfree(P->str_file);
     vfree(P->irmsd_file);
@@ -64,8 +66,11 @@ Parameters *default_values(Parameters *P, char *outdir){
         P->nattemps = 500;
         P->tree_id_activated = 0;
         P->random_percentage = 100;
+        P->treelist = 0;
         P->gop = -11;
         P->gep = -1;
+        P->only_tree = 0;
+        P->only_aln = 0;
         
         sprintf(P->mat, "blosum62mt");
         sprintf(P->dm_method, "ktup");      
@@ -84,14 +89,14 @@ Parameters *read_parameters(int argc, char** argv){
     int rep_activated=0;
     int mpi_activated=0;
     
-    if(argc < 2 || argc > 24){
+    if(argc < 2 || argc > 26){
         fprintf(stderr, "ERROR - Number of parameters wrong\n\n");
         printhelp();
         exit(EXIT_FAILURE);
     }
-
+    printf("Que passa\n");
     P = declare_parameters();
-
+        printf("Que passa\n");
     if(argc == 2 && strm(argv[1], "-help")){
         printhelp();
         exit(EXIT_SUCCESS);
@@ -243,6 +248,12 @@ Parameters *read_parameters(int argc, char** argv){
                     exit(EXIT_FAILURE);
                 }
             }
+            else if(strm(argv[i], "-only_tree")){
+                P->only_tree = 1;
+            }
+             else if(strm(argv[i], "-only_aln")){
+                P->only_aln = 1;
+            }
             else if(strm(argv[i], "-rep")){
                 i++;
             }
@@ -291,6 +302,18 @@ Parameters *read_parameters(int argc, char** argv){
                     fprintf(stderr, "ERROR - Parameter -treefile: No repeated option is enabled or MPI version is enabled\n");
                     exit(EXIT_FAILURE);
                 }
+            }
+            else if(strm(argv[i], "-treelist")){ //To pass a tree id file
+                i++;
+                if(i<argc && argv[i][0] != '-'){
+                        P->treelist = 1;
+                        sprintf(P->tree_list, "%s", argv[i]);
+                }
+                else {
+                    fprintf(stderr, "ERROR - Parameter -treefile: No Value\n");
+                    exit(EXIT_FAILURE);
+                }
+               
             }
             else if(strm(argv[i], "-outdir")){
                 i++;

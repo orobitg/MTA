@@ -22,6 +22,8 @@ struct Parameters{
     int nattemps;
     int tree_id_activated;
     int random_percentage;
+    int only_tree;
+    int only_aln;
     char *dm_method;
     char *align_method;
     char *align_method_bin;
@@ -29,6 +31,8 @@ struct Parameters{
     char *outdir;
     char *tree_id_file;
     char *tree_file;
+    char *tree_list;
+    int treelist;
     int mpi_mode;
     int other_pg;
     char *other_pg_mode;

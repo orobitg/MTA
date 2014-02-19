@@ -1,5 +1,6 @@
 
 #include <stdio.h>
+#include <unistd.h>
 #include "alignment_utils.h"
 #include "utils.h"
 
@@ -20,6 +21,7 @@ int mta_program_repeated_trees(Parameters *P, Sequence *S, Distance_matrix *DM){
     double max_score=-99999.99999;
     char *treename, *alnname, *libname=NULL, *bestalignment, *besttree, *scoresfile;
     char *tmpname;
+    char **list;
     NT_node **T;
     struct timeval tim;
 
@@ -32,81 +34,104 @@ int mta_program_repeated_trees(Parameters *P, Sequence *S, Distance_matrix *DM){
     bestalignment = (char *) vcalloc(FILENAMELEN, sizeof(char));
     besttree = (char *) vcalloc(FILENAMELEN, sizeof(char));
     sc_list = (double *) vcalloc(2, sizeof(double));
-        
-    sprintf(scoresfile, "%s%s.scores", P->outdir, (P->F)->name);
-    fp=openfile(scoresfile, "w");
     
-    if(strm(P->align_method, "tcoffee")){
-        libname = (char *) vcalloc(FILENAMELEN, sizeof(char));
-        sprintf(libname, "%s%s.lib", P->outdir, (P->F)->name);      
-    }
-  
-    if(strm(P->align_method, "clustalo") || strm(P->align_method, "mafft")){
-        tmpname = (char *) vcalloc(FILENAMELEN, sizeof(char));
-        sprintf(tmpname, "./outtree");
-        fptmp = openfile(tmpname, "w");
-        fclose(fptmp);
-        vfree(tmpname);
+    if(P->only_tree == 0){
+        if(P->only_aln == 0){
+            sprintf(scoresfile, "%s%s.scores", P->outdir, (P->F)->name);
+            fp=openfile(scoresfile, "w");
+        }
+
+        if(strm(P->align_method, "tcoffee")){
+            libname = (char *) vcalloc(FILENAMELEN, sizeof(char));
+            sprintf(libname, "%s%s.lib", P->outdir, (P->F)->name);      
+        }
+
+        if(strm(P->align_method, "clustalo") || strm(P->align_method, "mafft")){
+            tmpname = (char *) vcalloc(FILENAMELEN, sizeof(char));
+            sprintf(tmpname, "./outtree");
+            fptmp = openfile(tmpname, "w");
+            fclose(fptmp);
+            vfree(tmpname);
+        }
     }
     //gettimeofday(&tim, NULL);
     srand(1985);
+    if(P->treelist == 1){
+        list = read_tree_list(P->tree_list, P->ntree);
+    }
     
     for(i=0; i<P->ntree; i++){ 
         sprintf(treename, "%s%s_%d.dnd", P->outdir, (P->F)->name, i);
         sprintf(alnname, "%s%s_%d.fasta_aln", P->outdir, (P->F)->name, i);
-        
-        T = make_tree(DM, S, treename, "nj", i, P->random_percentage, P->align_method);   
-        align_tree(P, treename, libname, alnname, i);
-        sc_list[1] = calculate_score(P, alnname, i, sc_list);
-        
-        fprintf(fp, "%d;%s_%d;%lf\n", i, (P->F)->name, i, sc_list[1]);
-        fprintf(stdout, "\t- %d - Tree: %s_%d.dnd - Aln: %s_%d.fasta_aln  - Score: %lf\n", i, (P->F)->name, i, (P->F)->name, i, sc_list[1]);
+        if(P->treelist == 1){
+            sprintf(treename, "%s", list[i]);
+        }
+        else{
+            T = make_tree(DM, S, treename, "nj", i, P->random_percentage, P->align_method); 
+        }
+        if(P->only_tree == 0){
+            align_tree(P, treename, libname, alnname, i);
+            if(P->only_aln == 0){
+                sc_list[1] = calculate_score(P, alnname, i, sc_list);
 
-        if(sc_list[1] > max_score){
-            max_score = sc_list[1];
-            max_ntree=i;
-            if(i!=0){
-                remove_file(besttree);
-                remove_file(bestalignment);
+                fprintf(fp, "%d;%s_%d;%lf\n", i, (P->F)->name, i, sc_list[1]);
+                fprintf(stdout, "\t- %d - Tree: %s_%d.dnd - Aln: %s_%d.fasta_aln  - Score: %lf\n", i, (P->F)->name, i, (P->F)->name, i, sc_list[1]);
+
+                if(sc_list[1] > max_score){
+                    max_score = sc_list[1];
+                    max_ntree=i;
+                    if(i!=0){
+                        if(P->treelist == 0){
+                                remove_file(besttree);
+                                remove_file(bestalignment);
+                        }
+                    }
+                    sprintf(besttree, "%s", treename);
+                    sprintf(bestalignment, "%s", alnname);
+                }
+                else { 
+                    if(P->treelist == 0){
+                        remove_file(treename);
+                        remove_file(alnname);
+                    }
+
+                }
             }
-            sprintf(besttree, "%s", treename);
-            sprintf(bestalignment, "%s", alnname);
-        }
-        else {     
-            remove_file(treename);
-            remove_file(alnname);
-
-        }
         
+        }
     }
     
-    if(strm(P->align_method, "tcoffee")){
-        remove_file(libname);
-        vfree(libname);
+    if(P->only_tree == 0){
+        if(strm(P->align_method, "tcoffee")){
+            remove_file(libname);
+            vfree(libname);
+        }
+        if(strm(P->align_method, "clustalo") || strm(P->align_method, "mafft")){
+            remove(tmpname);
+        }
+        if(P->only_aln == 0){
+            fprintf(stdout, "---> Done\n");
+            fprintf(stdout, "\n\t- BEST TREE: %s_%d - Score: %lf\n", (P->F)->name, max_ntree, max_score);
+            if(P->treelist == 0){
+                sprintf(treename, "%s%s.dnd", P->outdir, (P->F)->name);
+                rename(besttree, treename);
+                sprintf(alnname, "%s%s.fasta_aln", P->outdir, (P->F)->name);
+                rename(bestalignment, alnname);
+            }
+
+            fprintf(fp, "Best;%s_%d;%lf\n", (P->F)->name, max_ntree, max_score);
+            fclose(fp);
+        }
     }
-    if(strm(P->align_method, "clustalo") || strm(P->align_method, "mafft")){
-        remove(tmpname);
-    }
-
-    fprintf(stdout, "---> Done\n");
-    fprintf(stdout, "\n\t- BEST TREE: %s_%d - Score: %lf\n", (P->F)->name, max_ntree, max_score);
-
-    sprintf(treename, "%s%s.dnd", P->outdir, (P->F)->name);
-    rename(besttree, treename);
-    sprintf(alnname, "%s%s.fasta_aln", P->outdir, (P->F)->name);
-    rename(bestalignment, alnname);
-
-    fprintf(fp, "Best;%s_%d;%lf\n", (P->F)->name, max_ntree, max_score);
     
     
-
-    fclose(fp);
     vfree(scoresfile);
     vfree(alnname);
     vfree(treename);
     vfree(bestalignment);
     vfree(besttree);
     vfree(sc_list);
+    vfree(list);
 
     return max_score;
 }
@@ -125,6 +150,7 @@ int mta_program_no_repeated_trees(Parameters *P, Sequence *S, Distance_matrix *D
     char *treename, *alnname, *libname=NULL, *scoresfile, *bestalignment, *besttree;
     char *tmpname;
     char **tree_id_list;
+    char **list;
     NT_node **T;
 
     struct timeval tim;
@@ -138,32 +164,42 @@ int mta_program_no_repeated_trees(Parameters *P, Sequence *S, Distance_matrix *D
     besttree = (char *) vcalloc(FILENAMELEN, sizeof(char));
     sc_list = (double *) vcalloc(2, sizeof(double));
     
-    sprintf(scoresfile, "%s%s.scores", P->outdir, (P->F)->name);
-    fp=openfile(scoresfile, "w");
     
-    
-    if(strm(P->align_method, "tcoffee")){
-        libname = (char *) vcalloc(FILENAMELEN, sizeof(char));
-        sprintf(libname, "%s%s.lib", P->outdir, (P->F)->name);
+   
+    if(P->only_tree == 0){
+        if(P->only_aln == 0){
+            sprintf(scoresfile, "%s%s.scores", P->outdir, (P->F)->name);
+            fp=openfile(scoresfile, "w");
+        }
+
+        if(strm(P->align_method, "tcoffee")){
+            libname = (char *) vcalloc(FILENAMELEN, sizeof(char));
+            sprintf(libname, "%s%s.lib", P->outdir, (P->F)->name);
+        }
+
+        if(strm(P->align_method, "clustalo") || strm(P->align_method, "mafft")){
+            tmpname = (char *) vcalloc(FILENAMELEN, sizeof(char));
+            sprintf(tmpname, "./outtree");
+            fptmp = openfile(tmpname, "w");
+            fclose(fptmp);
+            vfree(tmpname);
+        }
     }
     
-    if(strm(P->align_method, "clustalo") || strm(P->align_method, "mafft")){
-        tmpname = (char *) vcalloc(FILENAMELEN, sizeof(char));
-        sprintf(tmpname, "./outtree");
-        fptmp = openfile(tmpname, "w");
-        fclose(fptmp);
-        vfree(tmpname);
-    }
-    
-    tree_id_lenght = (5*S->nseq);
-    if(!P->tree_id_activated){
-        tree_id_list = declare_char(P->ntree, tree_id_lenght);
-        ntreeid =0;
+    if(P->treelist == 1){
+        list = read_tree_list(P->tree_list, P->ntree);
     }
     else {
-        entries = count_entries_file(P->tree_id_file, S->nseq);
-        tree_id_list = file2tree_id_list(P->tree_id_file, P->ntree, S->nseq, entries);
-        ntreeid = entries;
+        tree_id_lenght = (5*S->nseq);
+        if(!P->tree_id_activated){
+            tree_id_list = declare_char(P->ntree, tree_id_lenght);
+            ntreeid =0;
+        }
+        else {
+            entries = count_entries_file(P->tree_id_file, S->nseq);
+            tree_id_list = file2tree_id_list(P->tree_id_file, P->ntree, S->nseq, entries);
+            ntreeid = entries;
+        }
     }
      
     //gettimeofday(&tim, NULL);
@@ -174,8 +210,14 @@ int mta_program_no_repeated_trees(Parameters *P, Sequence *S, Distance_matrix *D
         tree_id = vcalloc(tree_id_lenght, sizeof(char));
         sprintf(treename, "%s%s_%d.dnd", P->outdir, (P->F)->name, i);
         sprintf(alnname, "%s%s_%d.fasta_aln", P->outdir, (P->F)->name, i);
+        
+        if(P->treelist == 1){
+            sprintf(treename, "%s", list[i]);
+        }
+        else{
+            T = make_tree(DM, S, treename, "nj", i, P->random_percentage, P->align_method); 
+        }
        
-        T = make_tree(DM, S, treename, "nj", i, P->random_percentage, P->align_method);
         T[3][0]->level = 0;
         tree_id = identify_tree(T[3][0], tree_id, S->nseq);
         if(search_tree_id(tree_id_list, tree_id, ntreeid)){
@@ -185,56 +227,70 @@ int mta_program_no_repeated_trees(Parameters *P, Sequence *S, Distance_matrix *D
             j=0;
             sprintf(tree_id_list[ntreeid], "%s", tree_id);         
             ntreeid++;
-            align_tree(P, treename, libname, alnname, i);
-            sc_list[1] = calculate_score(P, alnname, i, sc_list);
-    
-            fprintf(fp, "%d;%s_%d;%lf\n", i, (P->F)->name, i, sc_list[1]);
-            fprintf(stdout, "\t- %d - Tree: %s_%d.dnd - Aln: %s_%d.fasta_aln - Score: %lf\n", i, (P->F)->name, i, (P->F)->name, i, sc_list[1]);
-            if(sc_list[1] > max_score){
-                max_score = sc_list[1];
-                max_ntree=i;
-                if(i!=0){
-                    remove_file(besttree);
-                    remove_file(bestalignment);
+            if(P->only_tree == 0){
+                align_tree(P, treename, libname, alnname, i);
+                if(P->only_aln == 0){
+                    sc_list[1] = calculate_score(P, alnname, i, sc_list);
+
+                    fprintf(fp, "%d;%s_%d;%lf\n", i, (P->F)->name, i, sc_list[1]);
+                    fprintf(stdout, "\t- %d - Tree: %s_%d.dnd - Aln: %s_%d.fasta_aln - Score: %lf\n", i, (P->F)->name, i, (P->F)->name, i, sc_list[1]);
+                    if(sc_list[1] > max_score){
+                        max_score = sc_list[1];
+                        max_ntree=i;
+                        if(i!=0){
+                            if(P->treelist == 0){
+                                remove_file(besttree);
+                                remove_file(bestalignment);
+                            }
+                        }
+                        sprintf(besttree, "%s", treename);
+                        sprintf(bestalignment, "%s", alnname);
+                    }
+                    else {
+                        if(P->treelist == 0){
+                            remove_file(treename);
+                            remove_file(alnname);
+                        }
+                    }
                 }
-                sprintf(besttree, "%s", treename);
-                sprintf(bestalignment, "%s", alnname);
-            }
-            else {
-                remove_file(treename);
-                remove_file(alnname);
             }
         }
         
         vfree(tree_id);    
     }
-       
-    if(strm(P->align_method, "tcoffee")){
-        remove_file(libname);
-        vfree(libname);
-    }
-    if(strm(P->align_method, "clustalo") || strm(P->align_method, "mafft")){
-        remove(tmpname);
-    }
+    
+    if(P->only_tree == 0){
+        if(strm(P->align_method, "tcoffee")){
+            remove_file(libname);
+            vfree(libname);
+        }
+        if(strm(P->align_method, "clustalo") || strm(P->align_method, "mafft")){
+            remove(tmpname);
+        }
+        if(P->only_aln == 0){
+            fprintf(stdout, "---> Done\n");
+            fprintf(stdout, "\n\t- BEST TREE: %s_%d - Score: %lf\n", (P->F)->name, max_ntree, max_score);
+            if(P->treelist == 0){
+                sprintf(treename, "%s%s.dnd", P->outdir, (P->F)->name);
+                rename(besttree, treename);
+                sprintf(alnname, "%s%s.fasta_aln", P->outdir, (P->F)->name);
+                rename(bestalignment, alnname);
+            }
 
-    fprintf(stdout, "---> Done\n");
-    fprintf(stdout, "\n\t- BEST TREE: %s_%d - Score: %lf\n", (P->F)->name, max_ntree, max_score);
+            fprintf(fp, "Best;%s_%d;%lf\n", (P->F)->name, max_ntree, max_score);
+
+            fclose(fp);
+        }
+    }
     
-    sprintf(treename, "%s%s.dnd", P->outdir, (P->F)->name);
-    rename(besttree, treename);
-    sprintf(alnname, "%s%s.fasta_aln", P->outdir, (P->F)->name);
-    rename(bestalignment, alnname);
- 
-    fprintf(fp, "Best;%s_%d;%lf\n", (P->F)->name, max_ntree, max_score);
-    
-    fclose(fp);
     free_char(tree_id_list, -1);
     vfree(scoresfile);
     vfree(alnname);
     vfree(treename);
     vfree(bestalignment);
     vfree(besttree);
-    vfree(sc_list);    
+    vfree(sc_list);  
+    vfree(list);
     
     return max_score;
 }
@@ -366,25 +422,29 @@ void master_generate_mta(Parameters *P, Sequence *S, Distance_matrix *DM){
     for (i=1;i<np;i++){
         dest[i]=i;
     }
-    
-    if((strm(P->align_method, "tcoffee"))){
-        printf("\tBuiding lib....\n");
-        libname = (char *) vcalloc(FILENAMELEN, sizeof(char));
-        sprintf(libname, "%s/%s.lib", P->outdir, (P->F)->name);
-        sprintf(treatf, "%s %s -lib_only -out_lib %s > /dev/null 2>&1", P->align_method_bin, (P->F)->full, libname);
-        ret = system(treatf);
-        printf("\tDone....\n");
+    if(P->only_tree == 0){
+        if((strm(P->align_method, "tcoffee"))){
+            printf("\tBuiding lib....\n");
+            libname = (char *) vcalloc(FILENAMELEN, sizeof(char));
+            sprintf(libname, "%s/%s.lib", P->outdir, (P->F)->name);
+            sprintf(treatf, "%s %s -lib_only -out_lib %s > /dev/null 2>&1", P->align_method_bin, (P->F)->full, libname);
+            ret = system(treatf);
+            printf("\tDone....\n");
+        }
+        if(strm(P->align_method, "clustalo") || strm(P->align_method, "mafft")){
+            tmpname = (char *) vcalloc(FILENAMELEN, sizeof(char));
+            sprintf(tmpname, "./outtree");
+            fptmp = openfile(tmpname, "w");
+            fclose(fptmp);
+            vfree(tmpname);
+        }
+        if(P->only_aln == 0){
+            sprintf(scoresfile, "%s%s.scores", P->outdir, (P->F)->name);
+            fp = fopen(scoresfile, "w");
+        }
     }
-    if(strm(P->align_method, "clustalo") || strm(P->align_method, "mafft")){
-        tmpname = (char *) vcalloc(FILENAMELEN, sizeof(char));
-        sprintf(tmpname, "./outtree");
-        fptmp = openfile(tmpname, "w");
-        fclose(fptmp);
-        vfree(tmpname);
-    }
     
-    sprintf(scoresfile, "%s%s.scores", P->outdir, (P->F)->name);
-    fp = fopen(scoresfile, "w");
+   
     
     for(i=0; i<P->ntree; i++){
         buffer = malloc(tam);
@@ -399,24 +459,28 @@ void master_generate_mta(Parameters *P, Sequence *S, Distance_matrix *DM){
             MPI_Recv(sc_list, NSCORE_TOTAL, MPI_DOUBLE, MPI_ANY_SOURCE, TAG_WSSCORE, MPI_COMM_WORLD, &status);
 
             tree = (int) sc_list[0];  
-   
-            sprintf(treename, "%s%s_%d.dnd", P->outdir, (P->F)->name, tree);
-            sprintf(alnname, "%s%s_%d.fasta_aln", P->outdir, (P->F)->name, tree);
-            fprintf(fp, "%d;%s_%d;%lf\n", tree, (P->F)->name, tree, sc_list[1]);
-            fprintf(stdout, "\t- %d - Tree: %s_%d.dnd - Aln: %s_%d.fasta_aln  - Score: %lf\n", tree, (P->F)->name, tree, (P->F)->name, (int) tree, sc_list[1]);
-            if(sc_list[1] > max_score){
-                max_score = sc_list[1];
-                max_ntree=tree;
+            if(P->only_tree == 0 && P->only_aln == 0){
+                sprintf(treename, "%s%s_%d.dnd", P->outdir, (P->F)->name, tree);
+                sprintf(alnname, "%s%s_%d.fasta_aln", P->outdir, (P->F)->name, tree);
+                fprintf(fp, "%d;%s_%d;%lf\n", tree, (P->F)->name, tree, sc_list[1]);
+                fprintf(stdout, "\t- %d - Tree: %s_%d.dnd - Aln: %s_%d.fasta_aln  - Score: %lf\n", tree, (P->F)->name, tree, (P->F)->name, (int) tree, sc_list[1]);
+                if(sc_list[1] > max_score){
+                    max_score = sc_list[1];
+                    max_ntree=tree;
+                    if(P->treelist == 0){
+                        remove_file(besttree);
+                        remove_file(bestalignment);
+                    }
 
-                remove_file(besttree);
-                remove_file(bestalignment);
-
-                sprintf(besttree, "%s", treename);
-                sprintf(bestalignment, "%s", alnname);
-            }
-            else {
-                remove_file(treename);
-                remove_file(alnname);
+                    sprintf(besttree, "%s", treename);
+                    sprintf(bestalignment, "%s", alnname);
+                }
+                else {
+                    if(P->treelist == 0){
+                        remove_file(treename);
+                        remove_file(alnname);
+                    }
+                }
             }
 
             work--;
@@ -436,26 +500,31 @@ void master_generate_mta(Parameters *P, Sequence *S, Distance_matrix *DM){
         position=0;
         
         MPI_Recv(sc_list, NSCORE_TOTAL, MPI_DOUBLE, MPI_ANY_SOURCE, TAG_WSSCORE, MPI_COMM_WORLD, &status);
+        
+        if(P->only_tree == 0 && P->only_aln == 0){
+            sprintf(treename, "%s%s_%d.dnd", P->outdir, (P->F)->name, tree);
+            sprintf(alnname, "%s%s_%d.fasta_aln", P->outdir, (P->F)->name, tree);
+            fprintf(fp, "%d;%s_%d;%lf\n", tree, (P->F)->name, tree, sc_list[1]);
+            fprintf(stdout, "\t- %d - Tree: %s_%d.dnd - Aln: %s_%d.fasta_aln  - Score: %lf\n", tree, (P->F)->name, tree, (P->F)->name, tree, sc_list[1]);
+            if(sc_list[1] > max_score){
+                printf("%f - %f\n", sc_list[1], max_score);
+                max_score = sc_list[1];
+                max_ntree=tree;
+                if(P->treelist == 0){
+                    remove_file(besttree);
+                    remove_file(bestalignment);
+                }
+                #printf("removed_best: %s\n", alnname);
 
-        sprintf(treename, "%s%s_%d.dnd", P->outdir, (P->F)->name, tree);
-        sprintf(alnname, "%s%s_%d.fasta_aln", P->outdir, (P->F)->name, tree);
-        fprintf(fp, "%d;%s_%d;%lf\n", tree, (P->F)->name, tree, sc_list[1]);
-        fprintf(stdout, "\t- %d - Tree: %s_%d.dnd - Aln: %s_%d.fasta_aln  - Score: %lf\n", tree, (P->F)->name, tree, (P->F)->name, tree, sc_list[1]);
-        if(sc_list[1] > max_score){
-            printf("%f - %f\n", sc_list[1], max_score);
-            max_score = sc_list[1];
-            max_ntree=tree;
-
-            remove_file(besttree);
-            remove_file(bestalignment);
-            printf("removed_best: %s\n", alnname);
-
-            sprintf(besttree, "%s", treename);
-            sprintf(bestalignment, "%s", alnname);
-        }
-        else {
-            remove_file(treename);
-            remove_file(alnname);
+                sprintf(besttree, "%s", treename);
+                sprintf(bestalignment, "%s", alnname);
+            }
+            else {
+                if(P->treelist == 0){
+                    remove_file(treename);
+                    remove_file(alnname);
+                }
+            }
         }
  
         dest[dest[0]+1]=from_where;
@@ -469,26 +538,31 @@ void master_generate_mta(Parameters *P, Sequence *S, Distance_matrix *DM){
             MPI_Isend(&fin, 1, MPI_INT, i, TAG_MSTREE, MPI_COMM_WORLD, &req);
         }  
     }
-    
-    if(strm(P->align_method, "tcoffee")){
-        remove_file(libname);
-        vfree(libname);
-    }  
-     if(strm(P->align_method, "clustalo") || strm(P->align_method, "mafft")){
-        remove(tmpname);
+    if(P->only_tree == 0){
+        if(strm(P->align_method, "tcoffee")){
+            remove_file(libname);
+            vfree(libname);
+        }  
+         if(strm(P->align_method, "clustalo") || strm(P->align_method, "mafft")){
+            remove(tmpname);
+        }
+        if(P->only_aln == 0){
+            if(P->treelist == 0){
+                sprintf(treename, "%s%s.dnd", P->outdir, (P->F)->name);
+                rename(besttree, treename);
+                sprintf(alnname, "%s%s.fasta_aln", P->outdir, (P->F)->name);
+                rename(bestalignment, alnname);
+            }
+
+            fprintf(stdout, "\n\t- BEST TREE: %s_%d - Score: %lf\n", (P->F)->name, max_ntree, max_score);
+            fprintf(fp, "Best;%s_%d;%lf\n", (P->F)->name, max_ntree, max_score);
+
+            fprintf(stdout, "---> Done\n");
+
+            fclose(fp);
+        }
     }
-   
-    sprintf(treename, "%s%s.dnd", P->outdir, (P->F)->name);
-    rename(besttree, treename);
-    sprintf(alnname, "%s%s.fasta_aln", P->outdir, (P->F)->name);
-    rename(bestalignment, alnname);
-
-    fprintf(stdout, "\n\t- BEST TREE: %s_%d - Score: %lf\n", (P->F)->name, max_ntree, max_score);
-    fprintf(fp, "Best;%s_%d;%lf\n", (P->F)->name, max_ntree, max_score);
     
-    fprintf(stdout, "---> Done\n");
-
-    fclose(fp);
     vfree(treename);
     vfree(alnname);
     vfree(besttree);
@@ -508,6 +582,7 @@ void worker_generate_mta(Parameters *P, Sequence *S, Distance_matrix *DM){
     char *treename, *alnname, *libname=NULL;
     char *buffer;
     NT_node **T;
+    char **list;
     
     MPI_Status status;
     MPI_Request req;
@@ -518,10 +593,15 @@ void worker_generate_mta(Parameters *P, Sequence *S, Distance_matrix *DM){
     for(i=0; i<NSCORE_TOTAL; i++){
         sc_list[i]=0.0;
     }
+    if(P->only_tree == 0){
+        if(strm(P->align_method, "tcoffee")){
+            libname = (char *) vcalloc(FILENAMELEN, sizeof(char));
+            sprintf(libname, "%s/%s.lib", P->outdir, (P->F)->name);
+        }
+    }
     
-    if(strm(P->align_method, "tcoffee")){
-        libname = (char *) vcalloc(FILENAMELEN, sizeof(char));
-        sprintf(libname, "%s/%s.lib", P->outdir, (P->F)->name);
+    if(P->treelist == 1){
+        list = read_tree_list(P->tree_list, P->ntree);
     }
     
     while(tree != FIN_MSG){
@@ -530,15 +610,24 @@ void worker_generate_mta(Parameters *P, Sequence *S, Distance_matrix *DM){
         MPI_Recv(&tree, 1, MPI_INT, 0, TAG_MSTREE, MPI_COMM_WORLD, &status);
         
         if(tree != FIN_MSG){
-            
             treename = (char *) vcalloc(FILENAMELEN, sizeof(char));
             alnname = (char *) vcalloc(FILENAMELEN, sizeof(char));
-            sprintf(treename, "%s/%s_%d.dnd", P->outdir, (P->F)->name, tree);
+            
+            if(P->treelist == 1){
+                sprintf(treename, "%s, list[i]);
+            }
+            else {
+                sprintf(treename, "%s/%s_%d.dnd", P->outdir, (P->F)->name, tree);
+            }
             sprintf(alnname, "%s/%s_%d.fasta_aln", P->outdir, (P->F)->name, tree);
 
             T = make_tree(DM, S, treename, "nj", tree, P->random_percentage, P->align_method);
-            align_tree(P, treename, libname, alnname, tree);
-            sc_list[1] = calculate_score(P, alnname, tree, sc_list);          
+            if(P->only_tree == 0){
+                align_tree(P, treename, libname, alnname, tree);
+                if(P->only_aln == 0){
+                        sc_list[1] = calculate_score(P, alnname, tree, sc_list);
+                }
+            }
 
             MPI_Isend(sc_list, NSCORE_TOTAL, MPI_DOUBLE, 0, TAG_WSSCORE, MPI_COMM_WORLD, &req);   
               
@@ -547,12 +636,14 @@ void worker_generate_mta(Parameters *P, Sequence *S, Distance_matrix *DM){
         }
         free(buffer);      
     }
-    
-    if(strm(P->align_method, "tcoffee")){
-        vfree(libname);
+    if(P->only_tree == 0){
+        if(strm(P->align_method, "tcoffee")){
+            vfree(libname);
+        }
     }
     
     vfree(sc_list);
+    vfree(list);
 }
 
 #endif
@@ -633,4 +724,29 @@ void align_tree(Parameters *P, char *treename, char *libname, char *alnname, int
     }
     
     vfree(align_app);
+}
+
+char** read_tree_list(char* tree_list, int ntree){
+    FILE *fp;
+    char **list;
+    int i=0;
+    
+    list = (char **) vcalloc(ntree, sizeof(char *));
+    for(i=0; i<ntree; i++){
+        list[i] = (char *) vcalloc(ALLPATH, sizeof(char));
+    }
+    
+    fp = openfile(tree_list, "r");
+    
+    for(i=0; (i<ntree) && (fscanf(fp, "%s", list[i]) != EOF); i++);
+       
+       
+    if (i != ntree){
+        fprintf(stderr, "ERROR - Incorrect number of trees (ntree) %d != (list) %d\n", ntree, i);
+    }
+    
+    fclose(fp);
+    
+    return list;
+    
 }
