@@ -2505,6 +2505,7 @@ void root_unrooted_tree(char *treename, int ntree, char *retree_bin){
     FILE *fp;
     char *intmpname, *outtmpname;
     char *cmd;
+    int ret = 0; 
     
     intmpname = (char *) vcalloc(FILENAMELEN, sizeof(char));
     outtmpname = (char *) vcalloc(FILENAMELEN, sizeof(char));
@@ -2524,10 +2525,10 @@ void root_unrooted_tree(char *treename, int ntree, char *retree_bin){
     
     fclose(fp);
     sprintf(cmd, "%s < %s > %s", retree_bin, intmpname, outtmpname);
-    system(cmd);
+    ret=system(cmd);
     
     sprintf(cmd, "mv %s.rooted %s", treename, treename);
-    system(cmd);
+    ret=system(cmd);
     
     remove(intmpname);
     remove(outtmpname);

@@ -132,7 +132,7 @@ Paths *parse_paths(){
     Paths *PB;
     
     PB=declare_paths();
-    
+    printf("Eo\n");
     PB->mta_home = getenv("MTA_HOME");
     printf("%s\n", PB->mta_home);
     PB->tc_score_bin=getenv("TCOFFEE_BIN");

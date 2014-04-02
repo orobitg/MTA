@@ -124,6 +124,9 @@ int mta_program_repeated_trees(Parameters *P, Sequence *S, Distance_matrix *DM){
         }
     }
     
+    if(P->treelist == 1){
+        vfree(list);
+    }
     
     vfree(scoresfile);
     vfree(alnname);
@@ -131,8 +134,8 @@ int mta_program_repeated_trees(Parameters *P, Sequence *S, Distance_matrix *DM){
     vfree(bestalignment);
     vfree(besttree);
     vfree(sc_list);
-    vfree(list);
 
+    
     return max_score;
 }
 
@@ -283,6 +286,10 @@ int mta_program_no_repeated_trees(Parameters *P, Sequence *S, Distance_matrix *D
         }
     }
     
+    if(P->treelist == 1){
+        vfree(list);
+    }
+    
     free_char(tree_id_list, -1);
     vfree(scoresfile);
     vfree(alnname);
@@ -290,7 +297,6 @@ int mta_program_no_repeated_trees(Parameters *P, Sequence *S, Distance_matrix *D
     vfree(bestalignment);
     vfree(besttree);
     vfree(sc_list);  
-    vfree(list);
     
     return max_score;
 }
@@ -614,7 +620,7 @@ void worker_generate_mta(Parameters *P, Sequence *S, Distance_matrix *DM){
             alnname = (char *) vcalloc(FILENAMELEN, sizeof(char));
             
             if(P->treelist == 1){
-                sprintf(treename, "%s, list[i]);
+                sprintf(treename, "%s", list[i]);
             }
             else {
                 sprintf(treename, "%s/%s_%d.dnd", P->outdir, (P->F)->name, tree);
@@ -641,9 +647,10 @@ void worker_generate_mta(Parameters *P, Sequence *S, Distance_matrix *DM){
             vfree(libname);
         }
     }
-    
+    if(P->treelist == 1){
+        vfree(list);
+    }
     vfree(sc_list);
-    vfree(list);
 }
 
 #endif
