@@ -23,7 +23,6 @@ Parameters *declare_parameters(){
     P->str_file = (char *) vcalloc(ALLPATH, sizeof(char));
     P->irmsd_file = (char *) vcalloc(ALLPATH, sizeof(char));
     P->other_pg_mode = (char *) vcalloc(FILENAMELEN, sizeof(char));
-    
     P->PB = parse_paths();  
 
     return P;
