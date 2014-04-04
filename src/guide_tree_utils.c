@@ -2500,33 +2500,33 @@ char** file2tree_id_list(char *fname, int ntrees, int nseqs, int entries){
     return tree_id_list;
 }
 
-void root_unrooted_tree(char *treename, int ntree, char *retree_bin){
+char* root_unrooted_tree(char *treename, int ntree, char *retree_bin){
     
     FILE *fp;
-    char *intmpname, *outtmpname;
+    char *intmpname, *outtmpname, *treename2;
     char *cmd;
     
     intmpname = (char *) vcalloc(FILENAMELEN, sizeof(char));
     outtmpname = (char *) vcalloc(FILENAMELEN, sizeof(char));
+    treename2 = (char *) vcalloc(FILENAMELEN, sizeof(char));
     cmd = (char *) vcalloc(ALLPATH, sizeof(char));
+    
     
     sprintf(intmpname, "./input_%d.run", ntree);
     sprintf(outtmpname, "./output_%d.txt", ntree);
+    sprintf(treename2, "%s.rooted", treename);
     
     fp = fopen(intmpname, "w");
     fprintf(fp, "Y\n");
     fprintf(fp, "%s\n", treename);
     fprintf(fp, "W\n");
     fprintf(fp, "F\n");
-    fprintf(fp, "%s.rooted\n", treename);
+    fprintf(fp, "%s\n", treename2);
     fprintf(fp, "R\n");
     fprintf(fp, "Q\n");
     
     fclose(fp);
     sprintf(cmd, "%s < %s > %s", retree_bin, intmpname, outtmpname);
-    system(cmd);
-    
-    sprintf(cmd, "mv %s.rooted %s", treename, treename);
     system(cmd);
     
     remove(intmpname);
@@ -2536,6 +2536,7 @@ void root_unrooted_tree(char *treename, int ntree, char *retree_bin){
     vfree(outtmpname);
     vfree(cmd);
  
+    return treename2;
     
 }
 

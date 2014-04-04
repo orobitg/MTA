@@ -116,7 +116,7 @@ int search_tree_id(char** tree_id_list, char* tree_id, int ntreeid);
 int count_entries_file(char *fname, int nseq);
 char** file2tree_id_list(char *fname, int ntrees, int nseqs, int entries);
 
-void root_unrooted_tree(char *treename, int ntree, char *retree_bin);
+char* root_unrooted_tree(char *treename, int ntree, char *retree_bin);
 
 
 #endif	/* _GUIDE_TREE_HPP */

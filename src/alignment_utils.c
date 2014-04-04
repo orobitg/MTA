@@ -424,12 +424,14 @@ void master_generate_mta(Parameters *P, Sequence *S, Distance_matrix *DM){
     }
     if(P->only_tree == 0){
         if((strm(P->align_method, "tcoffee"))){
-            printf("\tBuiding lib....\n");
-            libname = (char *) vcalloc(FILENAMELEN, sizeof(char));
-            sprintf(libname, "%s/%s.lib", P->outdir, (P->F)->name);
-            sprintf(treatf, "%s %s -lib_only -out_lib %s > /dev/null 2>&1", P->align_method_bin, (P->F)->full, libname);
-            ret = system(treatf);
-            printf("\tDone....\n");
+            if(P->ntree >= np){
+                printf("\tBuiding lib....\n");
+                libname = (char *) vcalloc(FILENAMELEN, sizeof(char));
+                sprintf(libname, "%s/%s.lib", P->outdir, (P->F)->name);
+                sprintf(treatf, "%s %s -lib_only -out_lib %s > /dev/null 2>&1", P->align_method_bin, (P->F)->full, libname);
+                ret = system(treatf);
+                printf("\tDone....\n");
+            }
         }
         if(strm(P->align_method, "clustalo") || strm(P->align_method, "mafft")){
             tmpname = (char *) vcalloc(FILENAMELEN, sizeof(char));
@@ -540,8 +542,10 @@ void master_generate_mta(Parameters *P, Sequence *S, Distance_matrix *DM){
     }
     if(P->only_tree == 0){
         if(strm(P->align_method, "tcoffee")){
-            remove_file(libname);
-            vfree(libname);
+            if(P->ntree >= np){
+                remove_file(libname);
+                vfree(libname);
+            }
         }  
          if(strm(P->align_method, "clustalo") || strm(P->align_method, "mafft")){
             remove(tmpname);
@@ -665,8 +669,13 @@ void align_tree(Parameters *P, char *treename, char *libname, char *alnname, int
                     sprintf(align_app, "%s %s -usetree %s -lib %s -output=fasta -n_core=1 -outfile=%s > /dev/null 2>&1", (P->PB)->tcoffee_bin, (P->F)->full, treename, libname, alnname);
                 }
             }
-            else {           
-                sprintf(align_app, "%s %s -usetree %s -lib %s -output=fasta -n_core=1 -outfile=%s > /dev/null 2>&1", (P->PB)->tcoffee_bin, (P->F)->full, treename, libname, alnname);
+            else {
+                if(P->ntree >= np){
+                    sprintf(align_app, "%s %s -usetree %s -lib %s -output=fasta -n_core=1 -outfile=%s > /dev/null 2>&1", (P->PB)->tcoffee_bin, (P->F)->full, treename, libname, alnname);
+                }
+                else {
+                    sprintf(align_app, "%s %s -usetree %s -output=fasta -n_core=1 -outfile=%s > /dev/null 2>&1", (P->PB)->tcoffee_bin, (P->F)->full, treename, libname, alnname);
+                }
             }
             ret=system(align_app);
         }
@@ -687,9 +696,11 @@ void align_tree(Parameters *P, char *treename, char *libname, char *alnname, int
     }  
     else if(strm(P->align_method, "clustalo")){
         if((P->PB)->clustalo_bin != NULL){
-            root_unrooted_tree(treename, ntree, (P->PB)->retree_bin);
-            sprintf(align_app, "%s -i %s --guidetree-in=%s --outfmt=fa -o %s", (P->PB)->clustalo_bin, (P->F)->full, treename, alnname);
+            char *treename2;
+            treename2 = root_unrooted_tree(treename, ntree, (P->PB)->retree_bin);
+            sprintf(align_app, "%s -i %s --guidetree-in=%s --outfmt=fa -o %s", (P->PB)->clustalo_bin, (P->F)->full, treename2, alnname);
             ret=system(align_app);
+            vfree(treename2);
         }
         else {
             fprintf(stderr, "Error - ClustalO not found. Correct ClustalO path\n");
