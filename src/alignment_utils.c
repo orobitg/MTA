@@ -522,7 +522,7 @@ void master_generate_mta(Parameters *P, Sequence *S, Distance_matrix *DM){
                     remove_file(besttree);
                     remove_file(bestalignment);
                 }
-                #printf("removed_best: %s\n", alnname);
+                //printf("removed_best: %s\n", alnname);
 
                 sprintf(besttree, "%s", treename);
                 sprintf(bestalignment, "%s", alnname);
