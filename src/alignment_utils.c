@@ -18,7 +18,7 @@ int mta_program_repeated_trees(Parameters *P, Sequence *S, Distance_matrix *DM){
     FILE *fptmp;
     int i=0, j=0, k=0, ret, max_ntree=-1;
     double *sc_list;
-    double max_score=-99999.99999;
+    double max_score=-99999999.99999;
     char *treename, *alnname, *libname=NULL, *bestalignment, *besttree, *scoresfile;
     char *tmpname;
     char **list;
