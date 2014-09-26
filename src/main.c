@@ -15,7 +15,7 @@
 #include "distance_matrix_utils.h"
 #include "guide_tree_utils.h"
 #include "parameters_utils.h"
-#include <mpi.h>
+//#include <mpi.h>
 
 int my_rank;
 int np;
