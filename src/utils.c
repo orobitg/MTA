@@ -1,12 +1,5 @@
 
-/* 
- * File: utils.cpp
- * Author: Miquel Orobitg, Fernando Cores, Fernando Guirado
- *
- */
-
 #include "utils.h"
-
 
 double alloc_mem;
 double max_mem;
@@ -42,6 +35,8 @@ FILE *openfile(const char *filename, const char *mode){
     return fp;
 }
 
+/* Declare Fname structure */
+
 Fname *declare_fname (int size){
 
     Fname *F;
@@ -57,6 +52,8 @@ Fname *declare_fname (int size){
     return F;
 }
 
+/* Free Fname structure */
+
 Fname *free_fname(Fname *F){
     vfree(F->name);
     vfree(F->path);
@@ -65,13 +62,15 @@ Fname *free_fname(Fname *F){
     return NULL;
 }
 
+/* Declare tools paths */
+
 Paths *declare_paths(){
     
     Paths *PB;
     
     PB=vcalloc ( 1, sizeof (Paths));
     
-    PB->mta_home= PB->tcoffee_bin = (char *) vcalloc(ALLPATH, sizeof (char));
+    PB->mta_home= (char *) vcalloc(ALLPATH, sizeof (char));
     PB->tcoffee_bin = (char *) vcalloc(ALLPATH, sizeof (char));
     PB->clustalw_bin = (char *) vcalloc(ALLPATH, sizeof (char));
     PB->clustalo_bin = (char *) vcalloc(ALLPATH, sizeof (char));
@@ -86,20 +85,23 @@ Paths *declare_paths(){
     return PB;    
 }
 
+/*Free paths*/
+
 Paths *free_paths(Paths *PB){
-    //vfree(PB->tcoffee_bin);
-    //vfree(PB->clustalw_bin);
-    //vfree(PB->clustalo_bin);
-    //vfree(PB->normd_bin);
-    //vfree(PB->strike_bin);
-    //vfree(PB->tc_score_bin);
+
+    vfree(PB->tcoffee_bin);
+    vfree(PB->clustalw_bin);
+    vfree(PB->clustalo_bin);
+    vfree(PB->normd_bin);
+    vfree(PB->strike_bin);
+    vfree(PB->tc_score_bin);
+    vfree(PB->mta_home);
     
     return NULL;
 }
 
 /*
  * Parse the file names to the name structures
-
 */
 
 Fname *parse_fname(char* array){
@@ -127,50 +129,54 @@ Fname *parse_fname(char* array){
     return F;
 }
 
-Paths *parse_paths(){
+Paths *parse_paths(char *dir){
     
     Paths *PB;
+    char cwd[ALLPATH];
     
+    char *dummy  = strdup(dir);
+    char *dname = dirname( dummy );
+    getcwd(cwd, sizeof(cwd));
+   
+
     PB=declare_paths();
-    printf("Eo\n");
-    PB->mta_home = getenv("MTA_HOME");
-    printf("%s\n", PB->mta_home);
-    PB->tc_score_bin=getenv("TCOFFEE_BIN");
+    sprintf(PB->mta_home, "%s/%s", cwd, dname);
+    
+    sprintf(PB->tc_score_bin, "%s/plugins/t_coffee", PB->mta_home);
     if(PB->tc_score_bin==NULL)
         fprintf(stderr, "Warning: Triplet o Coffee path not found. Scores disabled\n");
-    //sprintf(PB->tc_score_bin, "%s/bin/plugins/t_coffee", PB->tc_score_bin);
     
-    PB->tcoffee_bin=getenv("TCOFFEE_BIN");
+    sprintf(PB->tcoffee_bin, "%s/plugins/t_coffee", PB->mta_home);
     if(PB->tcoffee_bin==NULL)
         fprintf(stderr, "Warning: T-Coffee path not found. T-coffee method disabled\n");
     
-    PB->clustalw_bin=getenv("CLUSTALW_BIN");
+    sprintf(PB->clustalw_bin, "%s/plugins/clustalw2", PB->mta_home);
     if(PB->clustalw_bin==NULL)
         fprintf(stderr, "Warning: ClustalW path not found. ClustalW method disabled\n");
     
-    PB->clustalo_bin=getenv("CLUSTALO_BIN");
+    sprintf(PB->clustalo_bin, "%s/plugins/clustalo", PB->mta_home);
     if(PB->clustalo_bin==NULL)
         fprintf(stderr, "Warning: ClustalO path not found. ClustalO method disabled\n");
     
-    PB->mafft_bin=getenv("MAFFT_BIN");
+    sprintf(PB->mafft_bin, "%s/plugins/mafft", PB->mta_home);
     if(PB->mafft_bin==NULL)
         fprintf(stderr, "Warning: Mafft path not found. Mafft method disabled\n");
     
-    PB->normd_bin=getenv("NORMD_BIN");
+    sprintf(PB->normd_bin, "%s/plugins/normd", PB->mta_home);
     if(PB->normd_bin==NULL)
         fprintf(stderr, "Warning: NorMD path not found. NorMD score disabled\n");
     
-    PB->strike_bin=getenv("STRIKE_BIN");
-    if(PB->strike_bin==NULL)
-        fprintf(stderr, "Warning: STRIKE path not found. STRIKE score disabled\n");
+    //PB->strike_bin=getenv("STRIKE_BIN");
+    //if(PB->strike_bin==NULL)
+     //   fprintf(stderr, "Warning: STRIKE path not found. STRIKE score disabled\n");
     
-    sprintf(PB->nwtomafft, "%s/bin/plugins/newick2mafft.rb", PB->mta_home);
-    sprintf(PB->retree_bin, "%s/bin/plugins/retree", PB->mta_home);
-    
-    //printf("%s\n%s\n%s\n%s\n%s\n%s\n", PB->tcoffee_bin,  PB->clustalw_bin,  PB->clustalo_bin, PB->normd_bin, PB->strike_bin, PB->tc_score_bin);
+    sprintf(PB->nwtomafft, "%s/plugins/newick2mafft.rb", PB->mta_home);
+    sprintf(PB->retree_bin, "%s/plugins/retree", PB->mta_home);
     
     return PB;
 }
+
+/* Remove file */
 
 void remove_file(char* file){
     
@@ -179,8 +185,8 @@ void remove_file(char* file){
     if((fp=fopen(file, "r")) != NULL){
         if(remove(file)==-1){
             fprintf(stderr, "\nWARNING: File %s not deleted.", file);
+            fclose(fp);
         }
-        fclose(fp);
     }
 }
 
@@ -853,78 +859,3 @@ int **normalize_array(int **p, int max, int norm){
 
     return p;
 }
-
-#ifdef MPI_FLAG
-
-//Not USED
-void write_lib(char *libname){
-    
-    FILE *fp;
-    char *lib;
-    char c;
-    long int size=0, i=0;
-    
-    MPI_Bcast(&size, 1, MPI_INT, 0, MPI_COMM_WORLD);
-   // printf("sizeo: %ld\n", size); 
-    lib = vcalloc(size, sizeof(char));
-    MPI_Bcast(lib, size, MPI_CHAR, 0, MPI_COMM_WORLD);
-    //printf("%s\n", lib);
-    
-    fp = fopen(libname, "w");
-/*
-    for(i=0; i<size; i++){
-        fprintf(fp, "%c", lib[i]);
-        //printf("%c", lib[i]);
-    }
-*/
-    fprintf(fp, "%s", lib);
-    //printf("%s\n", lib);
-    fclose(fp);
-/*
-    fp = fopen(libname, "r");
-    while(c != EOF){
-        c = fgetc(fp);
-        printf("%d", c);
-        //lib[i] = c;
-        i++;
-    }
-    
-    fclose(fp);
-    
-*/ 
-    vfree(lib);   
-}
-
-void read_lib(char *libname){
-    
-    FILE *fp;
-    char *lib;
-    char c=' ';
-    long int size=0, i=0;
-    
-    fp = fopen(libname, "r");
-    
-    fseek(fp,0,SEEK_END); //Nos vamos el final del archivo
-    size = (ftell(fp) * sizeof(char));
-    //printf("Size: %ld\n", size);
-    lib = vcalloc(size, sizeof(char));
-    fclose(fp);
-    fp = fopen(libname, "r");  
-   
-    while(c != EOF){
-        c = fgetc(fp);
-        //printf("c: %d", c);
-        lib[i] = c;
-        i++;
-    }
-
-    MPI_Bcast(&size, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    MPI_Bcast(lib, size, MPI_CHAR, 0, MPI_COMM_WORLD);
-    
-    fclose(fp);
-    
-    vfree(lib);
-    
-}
-
-#endif

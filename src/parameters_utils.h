@@ -1,9 +1,3 @@
-/* 
- * File:   parameters_utils.h
- * Author: oro
- *
- * Created on 5 / gener / 2011, 12:45
- */
 
 #ifndef PARAMETERS_UTILS_H
 #define	PARAMETERS_UTILS_H
@@ -29,6 +23,7 @@ struct Parameters{
     char *align_method_bin;
     char *score_method;
     char *outdir;
+    char *workdir;
     char *tree_id_file;
     char *tree_file;
     char *tree_list;
@@ -62,4 +57,3 @@ void printhelp();
 
 
 #endif	/* PARAMETERS_UTILS_H */
-

@@ -1,8 +1,3 @@
-/* 
- * File:   read_guide_tree_util.cpp
- * Author: Miquel Orobitg, Fernando Cores, Fernando Guirado
- *
- */
 
 #include "guide_tree_utils.h"
 
@@ -129,16 +124,6 @@ FILE * create_tree(NT_node ptree, NT_node parent,int *nseq,int  *ntotal,int  *nn
 }
 
 /*
-NT_node make_root_tree(NT_node ptree, NT_node parent,int *nseq,int  *ntotal,int  *nnodes,NT_node **lu, FILE *fp){
-   NT_node **T=NULL;
-   fp make_tree (ptree, NULL, nseq, ntotal, nnodes, lu, fp);
-
-   (T[3][0])->nseq=S->nseq;
-   return T[3][0];
-}
-*/
-
-/*
  * Declare, create and fill information of a tree node.
  */
 
@@ -207,25 +192,6 @@ void create_tree_node(NT_node pptr, NT_node parent){
 }
 
 
-
-/*
-FILE * skip_space(FILE *fp)
-	{
-  	int   c;
-
-  	do
-     	c = getc(fp);
-  	while(isspace(c));
-	if ( c==EOF)
-		{
-		fprintf ( stderr, "\nEOF");
-		myexit (EXIT_FAILURE);
-		}
-  	ungetc(c, fp);
-  	return fp;
-	}
-*/
-
 NT_node reroot(NT_node ptree, int nseq, int ntotal, int nnodes, NT_node **lu){
 
 	NT_node p, rootnode, rootptr;
@@ -271,11 +237,11 @@ NT_node reroot(NT_node ptree, int nseq, int ntotal, int nnodes, NT_node **lu){
 
 float calc_root_mean(NT_node root, float *maxdist, int nseq, NT_node **lu){
 
-        float dist , lsum = 0.0, rsum = 0.0, lmean,rmean,diff;
-   	NT_node p;
-   	int i;
-   	int nl, nr;
-   	int direction;
+	float dist , lsum = 0.0, rsum = 0.0, lmean,rmean,diff;
+	NT_node p;
+	int i;
+	int nl, nr;
+	int direction;
 
 
    	dist = (*maxdist) = 0;
@@ -312,7 +278,7 @@ float calc_root_mean(NT_node root, float *maxdist, int nseq, NT_node **lu){
 
       diff = lmean - rmean;
       return(diff);
-  }
+}
 
 float calc_mean(NT_node nptr, float *maxdist, int nseq,NT_node **lu){
     
@@ -406,7 +372,7 @@ float calc_mean(NT_node nptr, float *maxdist, int nseq,NT_node **lu){
 }
 
 NT_node insert_root(NT_node p, float diff){
-    //printf("insert root\n");
+
    NT_node newp, prev, q, t;
    float dist, prevdist,td;
 
@@ -680,10 +646,10 @@ void nj_tree(char **tree_description, int nseq, char *mode, int tree, int nrand)
     
     if(strm(mode, "nj")){   
         if (nseq<100){
-            slow_nj_tree_random(tree_description, tree, nrand);
+            slow_nj_tree_mta(tree_description, tree, nrand);
         }
         else{
-            fast_nj_tree_random(tree_description, tree, nrand);
+            fast_nj_tree_mta(tree_description, tree, nrand);
         }
     }
     else if(strm(mode, "nj_bgt")){
@@ -948,7 +914,7 @@ NT_node** read_tree(char *treefile, int *tot_node,int nseq, char **seq_names, in
     return lu_ptr;
 }
 
-void slow_nj_tree_random(char **tree_description, int tree, int nrand){
+void slow_nj_tree_mta(char **tree_description, int tree, int nrand){
 
     int i;
     int l[4],nude,k;
@@ -1195,7 +1161,7 @@ void slow_nj_tree_random(char **tree_description, int tree, int nrand){
     }
 }
 
-void fast_nj_tree_random(char **tree_description, int tree, int nrand){
+void fast_nj_tree_mta(char **tree_description, int tree, int nrand){
 
     register int i;
     int l[4],nude,k;
@@ -2501,7 +2467,7 @@ char** file2tree_id_list(char *fname, int ntrees, int nseqs, int entries){
 }
 
 char* root_unrooted_tree(char *treename, int ntree, char *retree_bin){
-    
+
     FILE *fp;
     char *intmpname, *outtmpname, *treename2;
     char *cmd;
@@ -2512,11 +2478,11 @@ char* root_unrooted_tree(char *treename, int ntree, char *retree_bin){
     treename2 = (char *) vcalloc(FILENAMELEN, sizeof(char));
     cmd = (char *) vcalloc(ALLPATH, sizeof(char));
     
-    
     sprintf(intmpname, "./input_%d.run", ntree);
     sprintf(outtmpname, "./output_%d.txt", ntree);
     sprintf(treename2, "%s.rooted", treename);
-    
+    fp = fopen("outtree", "w");
+    fclose(fp);
     fp = fopen(intmpname, "w");
     fprintf(fp, "Y\n");
     fprintf(fp, "%s\n", treename);
@@ -2527,19 +2493,19 @@ char* root_unrooted_tree(char *treename, int ntree, char *retree_bin){
     fprintf(fp, "Q\n");
     
     fclose(fp);
+
     sprintf(cmd, "%s < %s > %s", retree_bin, intmpname, outtmpname);
     ret=system(cmd);
-    
-    sprintf(cmd, "mv %s.rooted %s", treename, treename);
-    ret=system(cmd);
+
     
     remove(intmpname);
     remove(outtmpname);
-    
+    //remove("outtree");
+    //vfree(treename2);
     vfree(intmpname);
     vfree(outtmpname);
     vfree(cmd);
- 
+  
     return treename2;
     
 }

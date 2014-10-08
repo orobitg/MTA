@@ -1,8 +1,3 @@
-/*
- * File:   read_guide_tree_util.hpp
- * Author: Miquel Orobitg, Fernando Cores, Fernando Guirado
- *
- */
 
 #ifndef _GUIDE_TREE_H
 #define	_GUIDE_TREE_H
@@ -107,8 +102,8 @@ void print_phylip_tree(char **tree_description, FILE *tree, int bootstrap);
 void print_phylip_tree_clo(char **tree_description, FILE *tree, int bootstrap);
 void two_way_split(char **tree_description, FILE *tree, int start_row, int flag, int bootstrap);
 NT_node** read_tree(char *treefile, int *tot_node,int nseq, char **seq_names, int *out_seq_id, char *method);
-void slow_nj_tree_random(char **tree_description, int tree, int nrand);
-void fast_nj_tree_random(char **tree_description, int tree, int nrand);
+void slow_nj_tree_mta(char **tree_description, int tree, int nrand);
+void fast_nj_tree_mta(char **tree_description, int tree, int nrand);
 void slow_nj_tree_bgt(char **tree_description);
 void fast_nj_tree_bgt(char **tree_description);
 char* identify_tree(NT_node root, char *tree_id, int nseqs);

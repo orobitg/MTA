@@ -1,0 +1,69 @@
+PROJECT = mta.mpi
+
+# Environment 
+SRC = ./src
+OBJ = ./obj-mpi
+BIN = ./bin
+
+MPII=/users/cn/morobitg/Soft/mpich3/include
+MPIL=/users/cn/morobitg/Soft/mpich3/lib
+# Better do not change this
+MPIFLAGS=-DMPI_FLAG
+
+MPICC = mpicc
+CPPFLAGS := -I$(SRC) #-I$(MPII)
+# Add any options you like
+CPPFLAGS += -g
+CPPFLAGS += -O3
+
+CPPFLAGS += ${MPIFLAGS}
+#CPPFLAGS += -DMPICH_SKIP_MPICC
+
+LIBS = -lm -lpthread
+
+#LDFLAGS := -L$(MPIL)
+
+MKDIR=mkdir
+CP=cp
+
+OBJS = 	\
+	utils.o \
+	parameters_utils.o \
+	sequence_utils.o \
+	distance_matrix_utils.o \
+	guide_tree_utils.o \
+	alignment_utils.o \
+	evaluation_utils.o \
+	main.o
+	  
+	
+vpath %.c $(SRC)
+vpath %.o   $(OBJ)
+vpath %     $(BIN)
+
+.PHONY: all dir clean distclean
+
+all: dir build
+
+build: $(PROJECT)
+
+%.o: $(SRC)/%.c
+	$(MPICC) $(CPPFLAGS) -c $(SRC)/$(<F) -o $(OBJ)/$(@F)
+
+%: %.o
+	$(MPICC) $(LDFLAGS) $(addprefix $(OBJ)/,$(filter %.o,$(^F))) -o $(BIN)/$(@F)
+
+dir:
+	mkdir -p $(BIN); mkdir -p $(OBJ);
+	mkdir -p $(BIN)/plugins
+
+clean:
+	rm -f $(OBJ)/*.o
+
+distclean:
+	rm -rf $(BIN)
+	rm -rf $(OBJ)
+
+$(PROJECT): $(OBJS)
+	$(MPICC) $(LDFLAGS) $(addprefix $(OBJ)/,$(OBJS)) $(LIBS) -o $(BIN)/$(PROJECT)  
+

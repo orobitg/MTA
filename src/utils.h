@@ -1,8 +1,3 @@
-/*
- * File: utils.hpp
- * Author: Miquel Orobitg, Fernando Cores, Fernando Guirado
- *
- */
 
 #ifndef _UTILS_H
 #define	_UTILS_H
@@ -24,7 +19,7 @@
 #endif
 
 #define PROGRAM "MTA"
-#define VERSION "1.0"
+#define VERSION "2.0"
 #define AUTHOR "Miquel Orobitg, Fernado Guirado, Fernando Cores"
 //#define DISTRIBUTION_ADDRESS "http://gcd.udl.cat/mta"  //canviar
 
@@ -122,7 +117,7 @@ Fname *parse_fname(char* array);
 
 Paths *declare_paths();
 Paths *free_paths(Paths *PB);
-Paths *parse_paths();
+Paths *parse_paths(char *dir);
 
 void remove_file(char *file);
 

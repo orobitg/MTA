@@ -1,9 +1,4 @@
-/* 
- * File:   main.c
- * Author: oro
- *
- * Created on 30 / desembre / 2010, 11:35
- */
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,16 +10,9 @@
 #include "distance_matrix_utils.h"
 #include "guide_tree_utils.h"
 #include "parameters_utils.h"
-//#include <mpi.h>
 
 int my_rank;
 int np;
-
-//ARREGLAR ELS OPENS DE FITGERS, TRACTAR ERRORS
-//ARREGLAR PARAMETRES
-//PARAMETRE PER REPES O NO - fet
-//PARAMETRE PER IDENTIFICAR ARBRES DE FORA - Fet
-//PARAMETRE PER PODER AFEGIR UNA LLISTA DARBRES - fet
 
 char* other_pg_identify_tree(Parameters *P);
 
@@ -39,7 +27,7 @@ int main(int argc, char** argv) {
     double tini=0.0, tfi=0.0;
     int mpi_mode = 0;
     int other_pg = 0;
-
+   
     other_pg = search_mode(argc, argv, "-other_pg");
     
     /*Other functionalities as guide tree identification*/
@@ -73,23 +61,28 @@ int main(int argc, char** argv) {
         char *buffer;
        
         MPI_Init(&argc, &argv);
-
-        MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
         MPI_Comm_size(MPI_COMM_WORLD, &np);
-        
+        MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+
         P = read_parameters(argc, argv);
-        
+
         tam = 3 * sizeof(int);
         buffer = (char *) malloc(tam);
 
-        if(my_rank == 0){      
+        if(my_rank == 0){
+
+
+			fprintf(stdout, "\n------------------- MTA ~ Version %s ---------------------------\n\n", VERSION);
+			fprintf(stdout, "Input Files:\n");
+			fprintf(stdout, "\tInput: (Sequences) %s.%s\n", (P->F)->name, (P->F)->suffix);
+			fprintf(stdout, "\tInput: (MSA tool) %s\n", P->align_method);
+			fprintf(stdout, "\tInput: (Score strategy) %s\n", P->score_method);
+			fprintf(stdout, "\tInput: (Number of trees) %d\n", P->ntree);
+			fprintf(stdout, "\tOutput: (Output folder) %s\n", P->outdir);
             
-            fprintf(stdout, "\n-------------------MULTIPLE TREES METHOD---------------------------\n\n");           
-            fprintf(stdout, "Input Files:\n");
-            fprintf(stdout, "\tInput: (Sequences) %s.%s\n", (P->F)->name, (P->F)->suffix);
-            fprintf(stdout, "\tInput: (Method) %s\n", P->align_method);
-            fprintf(stdout, "\tInput: (Number of trees) %d\n", P->ntree);
-       
+			mkdir(P->outdir, 0700);
+			mkdir(P->workdir, 0700);
+
             S=read_fasta_sequences(P->seqfile);
             
             if(S==NULL){
@@ -124,16 +117,16 @@ int main(int argc, char** argv) {
         mta_program_mpi(P, S, DM, nseq);
 
         if(my_rank == 0){
-            printf("\nOUTPUT RESULTS:\n");
-            printf("\tFile Type: Guide Tree / Format: Newick / File Name: %s.dnd\n", (P->F)->name);
-            printf("\tFile Type: Alignment / Format: Fasta / File Name:  %s.fasta_aln\n", (P->F)->name);
-            printf("\tFile Type: Scores / Format: txt / File Name: %s.scores\n", (P->F)->name);
+            fprintf(stdout, "\nOUTPUT RESULTS:\n");
+            fprintf(stdout, "\tFile Type: Guide Tree / Format: Newick / File Name: %s.dnd\n", (P->F)->name);
+            fprintf(stdout, "\tFile Type: Alignment / Format: Fasta / File Name:  %s.fasta_aln\n", (P->F)->name);
+            fprintf(stdout, "\tFile Type: Scores / Format: txt / File Name: %s.scores\n", (P->F)->name);
             tfi = get_time();
-            printf("\nMultiples Trees Method Time: %f seconds\n", tfi-tini);
+            fprintf(stdout, "\nMultiples Trees Method Time: %f seconds\n", tfi-tini);
         }
-        
-        MPI_FINALIZE();
-        
+
+        //MPI_FINALIZE();
+
     }
     
 #elif SEQ_FLAG
@@ -141,15 +134,19 @@ int main(int argc, char** argv) {
     if(mpi_mode == 0) { /*Sequential version*/
         
         double max_score;
-        
-        P = read_parameters(argc, argv);
 
-        fprintf(stdout, "\n-------------------MULTIPLE TREES METHOD---------------------------\n\n");           
-        fprintf(stdout, "Input Files:\n");
-        fprintf(stdout, "\tInput: (Sequences) %s.%s\n", (P->F)->name, (P->F)->suffix);
-        fprintf(stdout, "\tInput: (Method) %s\n", P->align_method);
-        fprintf(stdout, "\tInput: (Number of trees) %d\n", P->ntree);
-        
+        P = read_parameters(argc, argv);
+		fprintf(stdout, "\n------------------- MTA ~ Version %s ---------------------------\n\n", VERSION);
+		fprintf(stdout, "Input Files:\n");
+		fprintf(stdout, "\tInput: (Sequences) %s.%s\n", (P->F)->name, (P->F)->suffix);
+		fprintf(stdout, "\tInput: (MSA tool) %s\n", P->align_method);
+		fprintf(stdout, "\tInput: (Score strategy) %s\n", P->score_method);
+		fprintf(stdout, "\tInput: (Number of trees) %d\n", P->ntree);
+		fprintf(stdout, "\tOutput: (Output folder) %s\n", P->outdir);
+
+		mkdir(P->outdir, 0700);
+		mkdir(P->workdir, 0700);
+
         S=read_fasta_sequences(P->seqfile);
 
         if(S==NULL){
@@ -166,22 +163,21 @@ int main(int argc, char** argv) {
             max_score = mta_program_no_repeated_trees(P, S, DM);
         }
         
-        printf("\nOUTPUT RESULTS:\n");
-        printf("\tFile Type: Guide Tree / Format: Newick / File Name: %s.dnd\n", (P->F)->name);
-        printf("\tFile Type: Alignment / Format: Fasta / File Name:  %s.fasta_aln\n", (P->F)->name);
-        printf("\tFile Type: Scores / Format: txt / File Name: %s.scores\n", (P->F)->name);
-        
+        fprintf(stdout, "\nOUTPUT RESULTS:\n");
+        fprintf(stdout,"\tFile Type: Guide Tree / Format: Newick / File Name: %s.dnd\n", (P->F)->name);
+        fprintf(stdout,"\tFile Type: Alignment / Format: Fasta / File Name:  %s.fasta_aln\n", (P->F)->name);
+        fprintf(stdout,"\tFile Type: Scores / Format: txt / File Name: %s.scores\n", (P->F)->name);
         tfi = get_time();
-        printf("\nMultiples Trees Method Time: %f seconds\n", tfi-tini);
+        fprintf(stdout,"\nMultiples Trees Method Time: %f seconds\n", tfi-tini);
         
        
     } 
 #endif
-    
+
     free_parameters(P);
     free_distance_matrix(DM);
     free_sequence(S);  
-        
+
     return (EXIT_SUCCESS); 
 }
 

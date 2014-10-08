@@ -1,9 +1,3 @@
-/* 
- * File:   sequence_utils.h
- * Author: oro
- *
- * Created on 30 / desembre / 2010, 16:10
- */
 
 #ifndef SEQUENCE_UTILS_H
 #define	SEQUENCE_UTILS_H
@@ -40,4 +34,3 @@ int is_dna(char x);
 int is_gap( char x);
 int is_in_set ( char r, char *list);
 #endif	/* SEQUENCE_UTILS_H */
-

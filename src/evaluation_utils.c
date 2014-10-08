@@ -15,7 +15,7 @@ double calculate_score(Parameters *P, char *alnname, int ntree, double *sc_list)
     
     score_method = (char *) vcalloc(ALLPATH, sizeof(char));
     scorefile = (char *) vcalloc(FILENAMELEN, sizeof(char));
-    sprintf(scorefile, "%s/%s_%d.score", TMP, (P->F)->name, ntree);
+    sprintf(scorefile, "%s/%s_%d.score", P->workdir, (P->F)->name, ntree);
     
     if(strm(P->score_method, "sp")){
         if((P->PB)->tcoffee_bin != NULL){      
@@ -35,7 +35,17 @@ double calculate_score(Parameters *P, char *alnname, int ntree, double *sc_list)
             exit(EXIT_FAILURE);
         }
     }
-    else if(strm(P->score_method, "triplet")){ //ARREGLAR
+    /*else if(strm(P->score_method, "tcs")){ //ARREGLAR
+	   if((P->PB)->tc_score_bin != NULL){
+		   sprintf(score_method, "%s -infile=%s -method=proba_pair -output=score_ascii -n_core=1 -outfile=%s/%s_%d.ascii 2> /dev/null",  (P->PB)->tc_score_bin, alnname, P->workdir, (P->F)->name, ntree);
+	   }
+	   else {
+		   fprintf(stderr, "Error - Triple Score not found. Wrong MTA_HOME path\n");
+		   exit(EXIT_FAILURE);
+	   }
+
+    }*/
+    /*else if(strm(P->score_method, "triplet")){ //ARREGLAR
         if((P->PB)->tc_score_bin != NULL){
             sprintf(score_method, "%s -infile=%s -output=html -evaluate_mode=triplet -n_core=1 -score -outfile=%s/%s_%d.html 2> /dev/null | grep 'TRIPLET=' | cut -d'=' -f2 > %s",  (P->PB)->tc_score_bin, alnname, TMP, (P->F)->name, ntree, scorefile);
         }
@@ -82,10 +92,10 @@ double calculate_score(Parameters *P, char *alnname, int ntree, double *sc_list)
             fprintf(stderr, "Error - iRMSD Score not found. Wrong T-Coffee path\n");
             exit(EXIT_FAILURE);
         }
-    }
+    }*/
 
     ret = system(score_method);
-    
+    sc_list[0] = (double) ntree;
     fp=openfile(scorefile, "r");
     ret=fscanf(fp, "%lf", &sc_list[1]);
     if(strm(P->score_method, "irmsdt") || strm(P->score_method, "irmsd")){
@@ -102,12 +112,10 @@ double calculate_score(Parameters *P, char *alnname, int ntree, double *sc_list)
 
 
     if(strm(P->score_method, "triplet") || strm(P->score_method, "coffee")){
-        sprintf(score_method, "%s/%s_%d.html", TMP, (P->F)->name, ntree);
+        sprintf(score_method, "%s/%s_%d.html", P->workdir, (P->F)->name, ntree);
         remove_file(score_method);
     }
     
-    sc_list[0] = (double) ntree;
-    //
     vfree(score_method);
     vfree(scorefile);
 

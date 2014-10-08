@@ -15,6 +15,7 @@ Parameters *declare_parameters(){
     P->align_method_bin = (char *) vcalloc(NAME_MAX, sizeof(char));
     P->score_method = (char *) vcalloc(NAME_MAX, sizeof(char));
     P->outdir = (char *) vcalloc(FILENAMELEN, sizeof(char));
+    P->workdir = (char *) vcalloc(FILENAMELEN, sizeof(char));
     P->seqfile = (char *) vcalloc(FILENAMELEN, sizeof(char));
     P->tree_id_file = (char *) vcalloc(FILENAMELEN, sizeof(char));
     P->tree_file = (char *) vcalloc(FILENAMELEN, sizeof(char));
@@ -23,8 +24,7 @@ Parameters *declare_parameters(){
     P->str_file = (char *) vcalloc(ALLPATH, sizeof(char));
     P->irmsd_file = (char *) vcalloc(ALLPATH, sizeof(char));
     P->other_pg_mode = (char *) vcalloc(FILENAMELEN, sizeof(char));
-    P->PB = parse_paths();  
-
+    
     return P;
 }
 
@@ -35,6 +35,7 @@ void free_parameters(Parameters *P){
     vfree(P->align_method_bin);
     vfree(P->score_method);
     vfree(P->outdir);
+    vfree(P->workdir);
     vfree(P->seqfile);
     vfree(P->tree_id_file);
     vfree(P->tree_file);
@@ -52,9 +53,10 @@ void free_parameters(Parameters *P){
 
 Parameters *default_values(Parameters *P, char *outdir){
 
-    sprintf(P->align_method, "tcoffee");
+    sprintf(P->align_method, "t_coffee");
     sprintf(P->align_method_bin, "%s", (P->PB)->tcoffee_bin);
-    sprintf(P->outdir, "%s", outdir);
+    sprintf(P->outdir, "./results/");
+    sprintf(P->workdir, "%swork/", P->outdir);
     P->mpi_mode = 0;
     
     if(!P->other_pg){
@@ -93,9 +95,10 @@ Parameters *read_parameters(int argc, char** argv){
         printhelp();
         exit(EXIT_FAILURE);
     }
-    printf("Que passa\n");
+
     P = declare_parameters();
-        printf("Que passa\n");
+    P->PB = parse_paths(argv[0]); 
+
     if(argc == 2 && strm(argv[1], "-help")){
         printhelp();
         exit(EXIT_SUCCESS);
@@ -197,7 +200,7 @@ Parameters *read_parameters(int argc, char** argv){
                     exit(EXIT_FAILURE);
                 }
             }
-            else if(strm(argv[i], "-dm_method")){
+            else if(strm(argv[i], "-dm")){
                 i++;
                 if(i<argc && argv[i][0] != '-'){
                     if(strm(argv[i], "ktup")){ /*I put this parameter if we want to use another dm methods. At the moment, ktup DM*/
@@ -214,36 +217,36 @@ Parameters *read_parameters(int argc, char** argv){
 
                 }
             }
-            else if(strm(argv[i], "-msa_method")){
+            else if(strm(argv[i], "-msa")){
                 i++;
                 if(i<argc && argv[i][0] != '-'){  //Aixo es pot unir
-                    if(strm(argv[i], "tcoffee") || strm(argv[i], "clustalw") || strm(argv[i], "clustalo") || strm(argv[i], "mafft")){
+                    if(strm(argv[i], "t_coffee") || strm(argv[i], "clustalw") || strm(argv[i], "clustalo") || strm(argv[i], "mafft")){
                         sprintf(P->align_method, "%s", argv[i]);  
                     }
                     else {
-                        fprintf(stderr, "ERROR - Parameter -msa_method: Wrong MSA method (tcoffee, clustalw, clustalo or mafft)\n");
+                        fprintf(stderr, "ERROR - Parameter -msa_method: Wrong MSA method (t_coffee, clustalw, clustalo or mafft)\n");
                         exit(EXIT_FAILURE);
                     }
                 }
                 else {
-                    fprintf(stderr, "ERROR - Parameter -msa_method: No Value (tcoffee, clustalw, clustalo or mafft)\n");
+                    fprintf(stderr, "ERROR - Parameter -msa_method: No Value (t_coffee, clustalw, clustalo)\n");
                     exit(EXIT_FAILURE);
                 }
             }
-            else if(strm(argv[i], "-sc_method")){
+            else if(strm(argv[i], "-score")){
                 i++;
                 if(i<argc && argv[i][0] != '-'){
-                    if(strm(argv[i], "sp") || strm(argv[i], "normd") || strm(argv[i], "triplet") || strm(argv[i], "coffee") || strm(argv[i], "strike") || strm(argv[i], "irmsd")){
+                    if(strm(argv[i], "sp") || strm(argv[i], "normd") || strm(argv[i], "tcs") || strm(argv[i], "triplet") || strm(argv[i], "coffee") || strm(argv[i], "strike") || strm(argv[i], "irmsd")){
                         sprintf(P->score_method, "%s", argv[i]);
                         P = score_parameters(P, argc, argv);
                     }
                     else {
-                        fprintf(stderr, "ERROR - Parameter -sc_method: Wrong score method (sp, normd, triplet, strike, irmsd)\n");
+                        fprintf(stderr, "ERROR - Parameter -sc_method: Wrong score method (sp, normd)\n");
                         exit(EXIT_FAILURE);
                     }
                 }
                 else {
-                    fprintf(stderr, "ERROR - Parameter -sc_method: No Value (sp, normd, triplet, strike, irmsd)\n");
+                    fprintf(stderr, "ERROR - Parameter -sc_method: No Value (sp, normd)\n");
                     exit(EXIT_FAILURE);
                 }
             }
@@ -314,17 +317,17 @@ Parameters *read_parameters(int argc, char** argv){
                 }
                
             }
-            else if(strm(argv[i], "-outdir")){
+            else if(strm(argv[i], "-output")){
                 i++;
                 if(i<argc && argv[i][0] != '-'){
-                    sprintf(P->outdir, "%s", argv[i]);
+                    sprintf(P->outdir, "%s/", argv[i]);
+                    sprintf(P->workdir, "%swork/", P->outdir);
                 }
                 else {
-                    fprintf(stderr, "ERROR - Parameter -outdir: No Value\n");
                     exit(EXIT_FAILURE);
                 }
             }
-            else if(strm(argv[i], "-mat") || strm(argv[i], "-gop") || strm(argv[i], "-gep") || strm(argv[i], "-egap") || strm(argv[i], "-pdb_strike")|| strm(argv[i], "-pdb_irmsd")){
+            else if(strm(argv[i], "-matrix") || strm(argv[i], "-gop") || strm(argv[i], "-gep") || strm(argv[i], "-egap") || strm(argv[i], "-pdb_strike")|| strm(argv[i], "-pdb_irmsd")){
                 i++;
             }
             else {
@@ -345,7 +348,7 @@ Parameters *score_parameters(Parameters *P, int argc, char** argv){
     
     if(strm(P->score_method, "sp")){
         for(i=1; i<argc; i++){
-            if(strm(argv[i], "-mat")){
+            if(strm(argv[i], "-matrix")){
                 i++;
                 if(i<argc && argv[i][0] != '-'){
                     if (strm(argv[i], "pam250mt"))sprintf(P->mat, "pam250mt");
@@ -436,7 +439,7 @@ Parameters *score_parameters(Parameters *P, int argc, char** argv){
         sprintf(P->mat, "blosum62.bla");
         
         for(i=1; i<argc; i++){
-            if(strm(argv[i], "-mat")){
+            if(strm(argv[i], "-matrix")){
                 i++;
                 if(i<argc && argv[i][0] != '-'){
                     if (strm(argv[i], "blosum62"))sprintf(P->mat, "blosum62.bla");
@@ -500,7 +503,7 @@ Parameters *score_parameters(Parameters *P, int argc, char** argv){
                 }
             }
         }
-        if(file_true == 0 && (strm(P->score_method, "strike") || strm(P->score_method, "mccga") || strm(P->score_method, "wscga"))){
+        if(file_true == 0 && (strm(P->score_method, "strike"))){
             fprintf(stderr, "ERROR - No connection or template file, necessary to strike, irmsd scores\n");
             exit(EXIT_FAILURE);
         }
@@ -550,14 +553,13 @@ int search_mode(int argc, char** argv, char *mode){
 /*REDOOOOOOO*/
 void printhelp(){
     fprintf(stdout, "\n******************HELP MENU***************************************************\n\n");
-    fprintf(stdout, "- USAGE: $Multiple_Trees Sequence_file.fasta (Parameters)\n");
+    /*fprintf(stdout, "- USAGE: $Multiple_Trees Sequence_file.fasta (Parameters)\n");
     fprintf(stdout, "\t-seq (Sequence file): The number of guide trees (required).\n");
     fprintf(stdout, "\t-ntree (N): The number of guide trees (optional - default=10).\n");
-    fprintf(stdout, "\t-%%tree (N): The percentage of guide tree modified in the multiple trees method (optional - default=100%%)\n");
-    fprintf(stdout, "\t-dm_method (method): The distance matrix method (ktup) (optional - default=ktup)\n");
-    fprintf(stdout, "\t-msa_method (method): The aligner method (tcoffee, clustaw, clustalo, mafft) (optional - default=tcoffee)\n");
-    fprintf(stdout, "\t-sc_method (method): The score method (sp, normd, coffee, triplet, strike, irmsd) (optional - defualt=sp)\n");
-    fprintf(stdout, "\t-outfile (outpath): To pass the name and the path of the output file (optional).");
+    fprintf(stdout, "\t-dm (method): The distance matrix method (ktup) (optional - default=ktup)\n");
+    fprintf(stdout, "\t-msa (method): The aligner method (t_coffee, clustaw, clustalo) (optional - default=t_coffee)\n");
+    fprintf(stdout, "\t-score (method): The score method (sp, normd, coffee, triplet, strike, irmsd) (optional - defualt=sp)\n");
+    fprintf(stdout, "\t-output: To pass the name and the path of the output file (optional).");
     fprintf(stdout, "\t-rep (N): 0 - Repeated trees not acceptred. 1 - Repeated trees accepted (optional - default=0).\n");
     fprintf(stdout, "\t- If rep=0:\n");
     fprintf(stdout, "\t\t-nattempt (N): Number of attempts to find a no repeated tree (optional - default=500)\n");
@@ -567,7 +569,7 @@ void printhelp(){
     fprintf(stdout, "\t- The best fasta alignment\n");
     fprintf(stdout, "\n- EXAMPLES:\n");
     fprintf(stdout, "\t- $Multiple_trees -seq sample.fasta\n");
-    fprintf(stdout, "\t- $Multiple_trees -seq sample.fasta -ntree 100 -dm_method ktup -msa_method tcoffee -sc_method normd -outfile sample2.fasta\n");
-    fprintf(stdout, "\t- $Multiple_trees -seq sample.fasta -ntree 100 -rep 0 -nattempt 1000 -outfile sample2.fasta\n");
-    fprintf(stdout, "\n**************************************************************************\n\n");
+    fprintf(stdout, "\t- $Multiple_trees -seq sample.fasta -ntree 100 -msa t_coffee -score normd -output dir/\n");
+    fprintf(stdout, "\t- $Multiple_trees -seq sample.fasta -ntree 100 -rep 0 -nattempt 1000 -output dir/\n");
+    fprintf(stdout, "\n**************************************************************************\n\n");*/
 }
