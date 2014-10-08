@@ -88,7 +88,7 @@ Pipeline parameters
 
 **-mpi**
 
-*You must specify this argument if you are running the parallel version.
+* You must specify this argument if you are running the parallel version.
 	`$ mpirun -np 4 bin/mta.mpi -seq /home/user/seq/example.fa -mpi`
 
 Run locally 
