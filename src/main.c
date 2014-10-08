@@ -123,9 +123,11 @@ int main(int argc, char** argv) {
             fprintf(stdout, "\tFile Type: Scores / Format: txt / File Name: %s.scores\n", (P->F)->name);
             tfi = get_time();
             fprintf(stdout, "\nMultiples Trees Method Time: %f seconds\n", tfi-tini);
+            MPI_Finalize();
         }
-
-        MPI_FINALIZE();
+        else{
+        	MPI_Finalize();
+        }
 
     }
     
