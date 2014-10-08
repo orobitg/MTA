@@ -13,8 +13,8 @@ Clone the git repository on your computer with the following command:
     
 Run the script install.sh to download, compile and install the tools listed below (dependecies). The install.sh script also compiles MTA and creates two binaries in the bin folder:
 	
-	* mta: The serial version of MTA.
-	* mta.mpi: The mpi version of MTA.
+	+ mta: The serial version of MTA.
+	+ mta.mpi: The mpi version of MTA.
 
 When done, move in the project root folder named `MTA`, 
 which contains an example dataset in the `tutorial` folder. 
@@ -88,7 +88,7 @@ Pipeline parameters
 
 **-mpi**
 
-*You must specify this argument if you are running the parallel version"
+*You must specify this argument if you are running the parallel version.
 	`$mpirun -np 4 bin/mta.mpi -seq /home/user/seq/example.fa -mpi`
 
 Run locally 
