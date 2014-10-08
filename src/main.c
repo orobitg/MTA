@@ -125,7 +125,7 @@ int main(int argc, char** argv) {
             fprintf(stdout, "\nMultiples Trees Method Time: %f seconds\n", tfi-tini);
         }
 
-        //MPI_FINALIZE();
+        MPI_FINALIZE();
 
     }
     

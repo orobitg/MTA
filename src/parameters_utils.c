@@ -207,12 +207,12 @@ Parameters *read_parameters(int argc, char** argv){
                         sprintf(P->dm_method, "%s", argv[i]);
                     }
                     else {
-                        fprintf(stderr, "ERROR - Parameter -dm_method: Wrong distance matrix values (ktup)\n");
+                        fprintf(stderr, "ERROR - Parameter -dm: Wrong distance matrix values (ktup)\n");
                         exit(EXIT_FAILURE);
                     }
                 }
                 else {
-                    fprintf(stderr, "ERROR - Parameter -dm_method: No Value (ktup)\n");
+                    fprintf(stderr, "ERROR - Parameter -dm: No Value (ktup)\n");
                     exit(EXIT_FAILURE);
 
                 }
@@ -224,12 +224,12 @@ Parameters *read_parameters(int argc, char** argv){
                         sprintf(P->align_method, "%s", argv[i]);  
                     }
                     else {
-                        fprintf(stderr, "ERROR - Parameter -msa_method: Wrong MSA method (t_coffee, clustalw, clustalo or mafft)\n");
+                        fprintf(stderr, "ERROR - Parameter -msa: Wrong MSA method (t_coffee, clustalw, clustalo or mafft)\n");
                         exit(EXIT_FAILURE);
                     }
                 }
                 else {
-                    fprintf(stderr, "ERROR - Parameter -msa_method: No Value (t_coffee, clustalw, clustalo)\n");
+                    fprintf(stderr, "ERROR - Parameter -msa: No Value (t_coffee, clustalw, clustalo)\n");
                     exit(EXIT_FAILURE);
                 }
             }
@@ -241,12 +241,12 @@ Parameters *read_parameters(int argc, char** argv){
                         P = score_parameters(P, argc, argv);
                     }
                     else {
-                        fprintf(stderr, "ERROR - Parameter -sc_method: Wrong score method (sp, normd)\n");
+                        fprintf(stderr, "ERROR - Parameter -score: Wrong score method (sp, normd)\n");
                         exit(EXIT_FAILURE);
                     }
                 }
                 else {
-                    fprintf(stderr, "ERROR - Parameter -sc_method: No Value (sp, normd)\n");
+                    fprintf(stderr, "ERROR - Parameter -score: No Value (sp, normd)\n");
                     exit(EXIT_FAILURE);
                 }
             }
