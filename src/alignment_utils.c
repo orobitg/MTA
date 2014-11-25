@@ -54,7 +54,7 @@ int mta_program_repeated_trees(Parameters *P, Sequence *S, Distance_matrix *DM){
         }
     }
     //gettimeofday(&tim, NULL);
-    srand(1985);
+
     if(P->treelist == 1){
         list = read_tree_list(P->tree_list, P->ntree);
     }
@@ -62,6 +62,7 @@ int mta_program_repeated_trees(Parameters *P, Sequence *S, Distance_matrix *DM){
     for(i=0; i<P->ntree; i++){ 
         sprintf(treename, "%s%s_%d.dnd", P->workdir, (P->F)->name, i);
         sprintf(alnname, "%s%s_%d.fasta_aln", P->workdir, (P->F)->name, i);
+        srand(1985+i);
         if(P->treelist == 1){
             sprintf(treename, "%s", list[i]);
         }
@@ -205,14 +206,14 @@ int mta_program_no_repeated_trees(Parameters *P, Sequence *S, Distance_matrix *D
     }
      
     //gettimeofday(&tim, NULL);
-    srand(1985);
+
   
     for(i=0, j=0; i<P->ntree && j<P->nattemps; i++, j++){
         
         tree_id = vcalloc(tree_id_lenght, sizeof(char));
         sprintf(treename, "%s%s_%d.dnd", P->workdir, (P->F)->name, i);
         sprintf(alnname, "%s%s_%d.fasta_aln", P->workdir, (P->F)->name, i);
-        
+        srand(1985+i);
         if(P->treelist == 1){
             sprintf(treename, "%s", list[i]);
         }
@@ -357,8 +358,8 @@ int mta_program_no_repeated_trees(Parameters *P, Sequence *S, Distance_matrix *D
 
         struct timeval tim;
         
-        srand(1985+my_rank);
         
+
         /*Receive and unpack Distance Matrix*/        
         MPI_Bcast(bufferDM, tamDM, MPI_PACKED, 0, MPI_COMM_WORLD);
         
@@ -617,6 +618,7 @@ void worker_generate_mta(Parameters *P, Sequence *S, Distance_matrix *DM){
         //position=0;
         MPI_Recv(&tree, 1, MPI_INT, 0, TAG_MSTREE, MPI_COMM_WORLD, &status);
         if(tree != FIN_MSG){
+        	srand(1985+tree);
             treename = (char *) vcalloc(FILENAMELEN, sizeof(char));
             alnname = (char *) vcalloc(FILENAMELEN, sizeof(char));
 

@@ -19,7 +19,7 @@
 #endif
 
 #define PROGRAM "MTA"
-#define VERSION "2.0"
+#define VERSION "2.0.1"
 #define AUTHOR "Miquel Orobitg, Fernado Guirado, Fernando Cores"
 //#define DISTRIBUTION_ADDRESS "http://gcd.udl.cat/mta"  //canviar
 
