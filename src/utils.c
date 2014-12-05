@@ -138,9 +138,8 @@ Paths *parse_paths(char *dir){
     char *dname = dirname( dummy );
     getcwd(cwd, sizeof(cwd));
    
-
     PB=declare_paths();
-    sprintf(PB->mta_home, "%s/%s", cwd, dname);
+    sprintf(PB->mta_home, "%s", dname);
     
     sprintf(PB->tc_score_bin, "%s/plugins/t_coffee", PB->mta_home);
     if(PB->tc_score_bin==NULL)
