@@ -1270,7 +1270,6 @@ void fast_nj_tree_mta(char **tree_description, int tree, int nrand){
         sum_cols[j] = tmp_sum;
     }
 
-    //srand(time(NULL));
 
 /*********************** Enter The Main Cycle ***************************/
 
